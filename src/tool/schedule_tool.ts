@@ -1,240 +1,247 @@
-import cron from 'node-cron';
-import notifier from 'node-notifier';
-import { randomUUID } from 'crypto';
-import fs from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import { fileURLToPath } from 'url';
 import { ToolHandler } from '../index.js';
 
-type ScheduledTask = {
-  id: string;
-  time: string;
-  message: string;
-  cronExpression: string;
-  toolName?: string;
-  toolArgs?: Record<string, unknown>;
-};
-
-const TASKS_FILE = path.join(fileURLToPath(import.meta.url), '../../scheduled_tasks.json');
-const tasksMap: { [id: string]: cron.ScheduledTask } = {};
-let tasks: ScheduledTask[] = [];
-
-/** schedule_tool 工具的参数列表 */
-export const schema = {
-  name: "schedule_tool",
-  description: "Manage scheduled tasks, supporting create/cancel/list",
-  type: "object",
-  properties: {
-    action: {
-      type: "string",
-      enum: ["create", "cancel", "list"],
-      description: "Action type"
-    },
-    time: {
-      type: "string",
-      description: "Time format: weekly@EEE@HH:mm, monthly@DD@HH:mm, now+Nm (N minutes later), now+Ns (N seconds later), once@YYYY-MM-DD HH:mm, once@HH:mm"
-    },
-    message: {
-      type: "string",
-      description: "Reminder message content"
-    },
-    id: {
-      type: "string",
-      description: "Task ID (required for cancellation)"
-    },
-    tool_name: {
-      type: "string",
-      description: "Name of the tool to execute"
-    },
-    tool_args: {
-      type: "object",
-      description: "Tool parameters"
-    }
-  },
-  required: ["action"],
-  dependencies: {
-    action: {
-      oneOf: [
-        { const: "create", required: ["time", "message"] },
-        { const: "cancel", required: ["id"] }
-      ]
-    }
-  }
-};
-
-async function loadTasks() {
-  try {
-    const data = await fs.readFile(TASKS_FILE, 'utf-8');
-    tasks = JSON.parse(data);
-  } catch (error) {
-    tasks = [];
-  }
+interface ScheduledTask {
+    id: string;
+    time: string; //  YYYY-MM-DD HH:mm:ss, every@Nm (every N minutes), every@Ns (every N seconds)
+    toolName: string;
+    toolArgs: any;
+    result?: any;
+    executed: boolean;
+    lastExecutionTime?: string;
+    interval?: string; // every@Nm or every@Ns, 为空表示一次性定时器
+    creationTime: string; // 定时器创建时间
+    type: 'once' | 'recurring'; // 定时器类型：一次性或循环
+    timerId?: any; // 定时器 ID
 }
 
-async function saveTasks() {
-  await fs.writeFile(TASKS_FILE, JSON.stringify(tasks, null, 2), 'utf-8');
+
+const tasksFilePath = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../build/scheduled_tasks.json');
+
+let scheduledTasks: ScheduledTask[] = [];
+
+// 加载定时任务
+function loadTasks() {
+    try {
+        if (!fs.existsSync(tasksFilePath)) {
+            fs.writeFileSync(tasksFilePath, '[]', 'utf8');
+            console.log('定时任务文件不存在，已创建空文件');
+        }
+        const data = fs.readFileSync(tasksFilePath, 'utf8');
+        try {
+            scheduledTasks = JSON.parse(data);
+            console.log('定时任务加载成功');
+        } catch (parseError) {
+            console.error('定时任务解析失败:', parseError);
+            scheduledTasks = [];
+        }
+    } catch (error) {
+        console.error('加载定时任务失败:', error);
+        scheduledTasks = [];
+    }
 }
 
-function parseTime(timeStr: string): string {
-  if (timeStr === 'now+1') {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 1);
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    return `${minutes} ${hours} * * *`;
-  } else if (timeStr.startsWith('now+')) {
-    const now = new Date();
-    const unit = timeStr.slice(-1);
-    const value = parseInt(timeStr.slice(3, -1));
-    if (unit === 'm') {
-      now.setMinutes(now.getMinutes() + value);
-    } else if (unit === 's') {
-      now.setSeconds(now.getSeconds() + value);
+// 保存定时任务
+function saveTasks() {
+    try {
+        // 排除 timerId 属性，避免循环引用
+        const tasksToSave = scheduledTasks.map(task => {
+            const { timerId, ...taskWithoutTimerId } = task;
+            return taskWithoutTimerId;
+        });
+        fs.writeFileSync(tasksFilePath, JSON.stringify(tasksToSave, null, 2), 'utf8');
+        console.log('定时任务保存成功');
+    } catch (error) {
+        console.error('保存定时任务失败:', error);
     }
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const seconds = now.getSeconds();
-    return `${seconds} ${minutes} ${hours} * * *`;
-  }
+}
 
-  const now = new Date();
+// 创建定时器
+async function createTask(task: ScheduledTask) {
+    scheduledTasks.push(task);
+    saveTasks();
+    console.log(`创建定时任务 ${task.id}`);
+    await scheduleTask(task);
+}
 
-  if (timeStr.includes('once@')) {
-    const [_, dateTime] = timeStr.split('@');
-    const [datePart, timePart] = dateTime.split(' ');
-    let year, month, day, hours, minutes;
+// 取消定时器
+function cancelTask(id: string) {
+    scheduledTasks = scheduledTasks.filter(task => task.id !== id);
+    saveTasks();
+    console.log(`取消定时任务 ${id}`);
+    // TODO:  需要清除定时器
+}
 
-    if (dateTime.includes('-')) {
-      // YYYY-MM-DD HH:mm 格式
-      const [date, time] = dateTime.split(' ');
-      [year, month, day] = date.split('-').map(Number);
-      [hours, minutes] = time.split(':').map(Number);
+// 执行定时器
+async function executeTask(task: ScheduledTask) {
+    try {
+        const result = await ToolHandler[task.toolName]({ params: { arguments: task.toolArgs } });
+        task.result = result;
+        task.executed = true;
+        task.lastExecutionTime = new Date().toISOString();
+        saveTasks();
+        console.log(`执行定时任务 ${task.id}`);
+    } catch (error) {
+        console.error(`执行定时任务 ${task.id} 失败:`, error);
+    }
+}
+
+// 调度定时任务
+async function scheduleTask(task: ScheduledTask) {
+    const now = new Date();
+    const creationTime = new Date(task.creationTime);
+    let delay = 0;
+
+    if (task.time.startsWith('every@')) {
+        const interval = task.time.substring(6);
+        let num = parseInt(interval);
+        let unit = interval.slice(String(num).length);
+
+        if (unit === 's') {
+            delay = num * 1000;
+        } else if (unit === 'm') {
+            delay = num * 60 * 1000;
+        }
+
+        if (task.interval) {
+            // 循环定时器
+            task.timerId = setInterval(async () => {
+                await executeTask(task);
+            }, delay);
+        } else {
+            // 一次性定时器
+            task.timerId = setTimeout(async () => {
+                await executeTask(task);
+            }, delay);
+        }
     } else {
-      // HH:mm 格式
-      [hours, minutes] = dateTime.split(':').map(Number);
-      const now = new Date();
-      year = now.getFullYear();
-      month = now.getMonth() + 1;
-      day = now.getDate();
+        //  指定时间执行
+        const targetTime = new Date(task.time);
+        delay = targetTime.getTime() - now.getTime();
+        if (delay > 0) {
+            task.timerId = setTimeout(async () => {
+                await executeTask(task);
+            }, delay);
+        }
     }
-
-    return `${minutes} ${hours} ${day} ${month} *`;
-  }
-
-  if (timeStr.includes('weekly@')) {
-    const [_, dayOfWeek, time] = timeStr.split('@');
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const dayIndex = days.indexOf(dayOfWeek);
-    const [hours, minutes] = time.split(':').map(Number);
-    return `${minutes} ${hours} * * ${dayIndex}`;
-  }
-
-  if (timeStr.includes('monthly@')) {
-    const [_, day, time] = timeStr.split('@');
-    const [hours, minutes] = time.split(':').map(Number);
-    return `${minutes} ${hours} ${day} * *`;
-  }
-
-  if (timeStr === 'now+1') {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 1);
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    return `${minutes} ${hours} * * *`;
-  }
-
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  return `${minutes} ${hours} * * *`;
 }
 
-function scheduleJob(task: ScheduledTask) {
-  const job = cron.schedule(task.cronExpression, async () => {
-    notifier.notify({
-      title: 'MCP Reminder',
-      message: task.message,
-      sound: true
-    });
+//  启动时加载所有定时任务
+loadTasks();
+scheduledTasks.forEach(task => scheduleTask(task));
 
-    if (task.toolName && ToolHandler[task.toolName]) {
-      await ToolHandler[task.toolName]({ params: { arguments: task.toolArgs } });
-    }
-  });
-  tasksMap[task.id] = job;
-}
+export const schema = {
+    name: "schedule_tool",
+    description: "Manage scheduled tasks, supporting create/cancel/list",
+    type: "object",
+    properties: {
+        action: {
+            type: "string",
+            enum: ["create", "cancel", "list", "cancel_all_once", "cancel_all_recurring"],
+            description: "Action type",
+        },
+        time: {
+            type: "string",
+            description: "Time format: YYYY-MM-DD HH:mm:ss, every@Nm (every N minutes), every@Ns (every N seconds)",
+        },
+       interval: {
+            type: "string",
+            description: "Interval format: every@Nm (every N minutes), every@Ns (every N seconds)",
+        },
+       toolName: {
+            description: "Name of the tool to execute",
+        },
+        toolArgs: {
+            type: "object",
+            description: "Tool parameters",
+        },
+        id: {
+            type: "string",
+            description: "Task ID (required for cancellation)",
+        },
+    },
+    required: ["action"],
+};
 
 export default async (request: any) => {
-  await loadTasks();
-  const { action, id, time, message, tool_name, tool_args } = request.params.arguments;
+    const action = request.params.arguments?.action;
+    const time = request.params.arguments?.time;
+    const toolName = request.params.arguments?.toolName;
+    const toolArgs = request.params.arguments?.toolArgs;
+    const id = request.params.arguments?.id;
 
-  try {
     switch (action) {
-      case 'create': {
-        const taskId = id || randomUUID();
-        const cronExpression = parseTime(time);
-
-        const newTask = {
-          id: taskId,
-          time,
-          message,
-          cronExpression,
-          toolName: tool_name,
-          toolArgs: tool_args
-        };
-
-        tasks.push(newTask);
-        scheduleJob(newTask);
-        await saveTasks();
-
-        return {
-          content: [{
-            type: 'text',
-            text: JSON.stringify({ id: taskId, status: 'created' })
-          }]
-        };
-      }
-
-      case 'cancel': {
-        const taskIndex = tasks.findIndex(t => t.id === id);
-        if (taskIndex === -1) throw new Error("任务不存在");
-
-        tasksMap[id]?.stop();
-        delete tasksMap[id];
-        tasks.splice(taskIndex, 1);
-        await saveTasks();
-
-        return {
-          content: [{
-            type: 'text',
-            text: JSON.stringify({ id, status: 'cancelled' })
-          }]
-        };
-      }
-
-      case 'list': {
-        return {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(tasks.map(t => ({
-              id: t.id,
-              time: t.time,
-              message: t.message,
-              tool_name: t.toolName,
-              tool_args: t.toolArgs
-            })))
-          }]
-        };
-      }
-
-      default:
-        throw new Error("无效操作");
+        case "create":
+            if (!time || !toolName || !toolArgs) {
+                throw new Error("缺少参数：time, toolName, toolArgs");
+            }
+            const newTask: ScheduledTask = {
+                id: uuidv4(),
+                time: time,
+                toolName: toolName,
+                toolArgs: toolArgs,
+                executed: false,
+                creationTime: new Date().toISOString(),
+                interval: time.startsWith('every@') ? time : undefined,
+                type: time.startsWith('every@') ? 'recurring' : 'once',
+            };
+            await createTask(newTask);
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `创建定时任务成功，任务ID：${newTask.id}`,
+                    },
+                ],
+            };
+        case "cancel":
+            if (!id) {
+                throw new Error("缺少参数：id");
+            }
+            cancelTask(id);
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `取消定时任务成功，任务ID：${id}`,
+                    },
+                ],
+            };
+        case "list":
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: JSON.stringify(scheduledTasks, null, 2),
+                    },
+                ],
+            };
+        case "cancel_all_once":
+            scheduledTasks = scheduledTasks.filter(task => task.type !== 'once');
+            saveTasks();
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `取消所有一次性定时任务成功`,
+                    },
+                ],
+            };
+        case "cancel_all_recurring":
+            scheduledTasks = scheduledTasks.filter(task => task.type !== 'recurring');
+            saveTasks();
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `取消所有循环定时任务成功`,
+                    },
+                ],
+            };
+        default:
+            throw new Error("未知操作类型");
     }
-  } catch (error) {
-    return {
-      content: [{
-        type: 'text',
-        text: error instanceof Error ? error.message : '未知错误'
-      }],
-      isError: true
-    };
-  }
 };

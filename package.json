@@ -18,13 +18,13 @@
     "build_dev": "tsc --build --diagnostics && node -e \"require('fs').chmodSync('build/index.js', '755')\""
   },
   "devDependencies": {
-    "@types/node": "^20.11.24",
-    "typescript": "^5.7.2",
     "@types/archiver": "^6.0.3",
     "@types/extract-zip": "^2.0.0",
+    "@types/node": "^20.11.24",
     "@types/node-cron": "^3.0.11",
     "@types/node-notifier": "^8.0.5",
-    "@types/tar": "^6.1.13"
+    "@types/tar": "^6.1.13",
+    "typescript": "^5.7.2"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "0.6.0",
@@ -36,6 +36,7 @@
     "node-cron": "^3.0.3",
     "node-notifier": "^10.0.1",
     "ssh2": "^1.16.0",
-    "tar": "^7.4.3"
+    "tar": "^7.4.3",
+    "uuid": "^11.1.0"
   }
 }
