@@ -18,22 +18,64 @@ export const schema = {
         },
     },
     required: ["title", "content"],
+    outputSchema: {
+        type: "object",
+        properties: {
+            content: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        type: {
+                            type: "string",
+                            description: "The content type (e.g., 'text')."
+                        },
+                        text: {
+                            type: "string",
+                            description: "The query result in JSON string format."
+                        }
+                    },
+                    required: ["type", "text"]
+                },
+                description: "An array containing the query result."
+            },
+            isError: {
+                type: "boolean",
+                description: "Indicates whether an error occurred during the query.",
+                default: false
+            }
+        },
+        required: ["content"]
+    }
 };
 
 export default async (request: any) => {
-    const title = String(request.params.arguments?.title);
-    const content = String(request.params.arguments?.content);
-    if (!title || !content) {
-        throw new Error("Title and content are required");
+    try {
+        const title = String(request.params.arguments?.title);
+        const content = String(request.params.arguments?.content);
+        if (!title || !content) {
+            throw new Error("Title and content are required");
+        }
+        const id = String(Object.keys(notes).length + 1);
+        notes[id] = { title, content };
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Created note ${id}: ${title}`,
+                },
+            ],
+        };
+    } catch (error: any) {
+        console.error(`Error creating note: ${error}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Error creating note: ${error.message}`,
+                },
+            ],
+            isError: true
+        };
     }
-    const id = String(Object.keys(notes).length + 1);
-    notes[id] = { title, content };
-    return {
-        content: [
-            {
-                type: "text",
-                text: `Created note ${id}: ${title}`,
-            },
-        ],
-    };
 };
