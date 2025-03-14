@@ -1,8 +1,7 @@
 import fs from 'fs';
-import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { fileURLToPath } from 'url';
-import { ToolHandler } from '../index.js';
+import { LogService } from '../logService.js';
+import { tasksFilePath, ToolHandler } from '../index.js';
 
 type ScheduledTask = {
     id: string;
@@ -14,32 +13,27 @@ type ScheduledTask = {
     result?: any;
     lastExecutionTime?: string;
 } & (
-    | {
-        type: 'once_absolute';
-        time: string; // ISO 8601 格式
-    }
-    | {
-        type: 'once_relative';
-        delaySeconds: number;
-    }
-    | {
-        type: 'recurring';
-        interval: string; // every@格式
-        startTime?: string; // ISO 8601 格式
-    }
-);
+        | {
+            type: 'once_absolute';
+            time: string; // ISO 8601 格式
+        }
+        | {
+            type: 'once_relative';
+            delaySeconds: number;
+        }
+        | {
+            type: 'recurring';
+            interval: string; // every@格式
+            startTime?: string; // ISO 8601 格式
+        }
+    );
 
-
-const tasksFilePath = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../build/scheduled_tasks.json');
 
 let scheduledTasks: ScheduledTask[] = [];
 
 // 加载定时任务
 function loadTasks() {
     try {
-        if (!fs.existsSync(tasksFilePath)) {
-            fs.writeFileSync(tasksFilePath, '[]', 'utf8');
-        }
         const data = fs.readFileSync(tasksFilePath, 'utf8');
         try {
             const parsedTasks = JSON.parse(data);
@@ -70,7 +64,6 @@ function saveTasks() {
             return taskWithoutTimerId;
         });
         fs.writeFileSync(tasksFilePath, JSON.stringify(tasksToSave, null, 2), 'utf8');
-        console.log('定时任务保存成功');
     } catch (error) {
     }
 }
@@ -84,19 +77,45 @@ async function createTask(task: ScheduledTask) {
 
 // 取消定时器
 function cancelTask(id: string) {
+    const taskToCancel = scheduledTasks.find(task => task.id === id);
+    if (taskToCancel && taskToCancel.timerId) {
+        clearTimeout(taskToCancel.timerId);
+        if (taskToCancel.type === 'recurring') {
+            clearInterval(taskToCancel.timerId);
+        }
+    }
     scheduledTasks = scheduledTasks.filter(task => task.id !== id);
     saveTasks();
 }
 
+
 // 执行定时器
 async function executeTask(task: ScheduledTask) {
+    const start = Date.now();
     try {
-        const result = await ToolHandler[task.toolName]({ params: { arguments: task.toolArgs } });
-        task.result = result;
+        await ToolHandler[task.toolName]({ params: { arguments: task.toolArgs } });
         task.executed = true;
         task.lastExecutionTime = new Date().toISOString();
         saveTasks();
-    } catch (error) {
+        LogService.log({
+            ts: new Date().toISOString(),
+            tool: task.toolName,
+            args: task.toolArgs,
+            stat: 'success',
+            cost: Date.now() - start,
+            tid: task.id
+        });
+    } catch (error: any) {
+        LogService.log({
+            ts: new Date().toISOString(),
+            tool: task.toolName,
+            args: task.toolArgs,
+            stat: 'error',
+            err: error.message,
+            trace: error.stack,
+            cost: Date.now() - start,
+            tid: task.id
+        });
     }
 }
 
@@ -142,9 +161,15 @@ async function scheduleTask(task: ScheduledTask) {
 
             task.timerId = setTimeout(async () => {
                 await executeTask(task);
-                task.timerId = setInterval(async () => {
+                // 清除旧的timeout并创建interval
+                if (task.timerId) {
+                    clearTimeout(task.timerId);
+                }
+                const intervalId = setInterval(async () => {
                     await executeTask(task);
                 }, intervalMs);
+                task.timerId = intervalId;
+                saveTasks(); // 保存新的timerId
             }, initialDelay);
             break;
     }
@@ -287,7 +312,7 @@ export default async (request: any) => {
                     interval: interval,
                 };
             }
-             else {
+            else {
                 throw new Error("Missing required parameters: time/delaySeconds/interval");
             }
             await createTask(newTask);
@@ -326,6 +351,11 @@ export default async (request: any) => {
                 ],
             };
         case "cancel_all_once":
+            scheduledTasks.forEach(task => {
+                if ((task.type === 'once_absolute' || task.type === 'once_relative') && task.timerId) {
+                    clearTimeout(task.timerId);
+                }
+            });
             scheduledTasks = scheduledTasks.filter(task => task.type !== 'once_absolute' && task.type !== 'once_relative');
             saveTasks();
             return {
@@ -337,6 +367,11 @@ export default async (request: any) => {
                 ],
             };
         case "cancel_all_recurring":
+            scheduledTasks.forEach(task => {
+                if (task.type === 'recurring' && task.timerId) {
+                    clearInterval(task.timerId); // 新增清理定时器逻辑
+                }
+            });
             scheduledTasks = scheduledTasks.filter(task => task.type !== 'recurring');
             saveTasks();
             return {

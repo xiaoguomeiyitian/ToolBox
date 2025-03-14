@@ -118,7 +118,6 @@ export default async (request: any) => {
             ],
         };
     } catch (error: any) {
-        console.error(`Error getting time: ${error}`);
         return {
             content: [
                 {

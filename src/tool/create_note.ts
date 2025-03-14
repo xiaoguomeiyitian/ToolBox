@@ -53,21 +53,30 @@ export default async (request: any) => {
     try {
         const title = String(request.params.arguments?.title);
         const content = String(request.params.arguments?.content);
+
         if (!title || !content) {
             throw new Error("Title and content are required");
         }
+
+        if (title.length > 100) {
+            throw new Error("Title must be less than 100 characters");
+        }
+
+        if (content.length > 1000) {
+            throw new Error("Content must be less than 1000 characters");
+        }
+
         const id = String(Object.keys(notes).length + 1);
         notes[id] = { title, content };
         return {
             content: [
                 {
                     type: "text",
-                    text: `Created note ${id}: ${title}`,
+                    text: JSON.stringify(`Created note ${id}: ${title}`),
                 },
             ],
         };
     } catch (error: any) {
-        console.error(`Error creating note: ${error}`);
         return {
             content: [
                 {

@@ -108,7 +108,6 @@ export default async (request: any) => {
             ],
         };
     } catch (error: any) {
-        console.error(`Error getting time: ${error}`);
         return {
             content: [
                 {
@@ -158,6 +157,7 @@ To integrate with the Claude Desktop application, add the following server confi
   ],
   "env": {
     "MONGO_URI": "",
+    "MONGO_INDEX_OPS": "true",
     "REDIS_URI": "",
     "SSH_server1_URI": ""
   },

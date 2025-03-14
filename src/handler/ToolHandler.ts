@@ -1,10 +1,6 @@
-import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { ToolHandler } from './index.js';
-
-const toolDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'tool');
-const toolFiles = fs.readdirSync(toolDir).filter(file => file.endsWith('.js') || file.endsWith('.ts'));
+import { toolDir, toolFiles, ToolHandler } from '../index.js';
+import { LogService } from '../logService.js';
 
 const tools: any[] = [];
 
@@ -34,11 +30,31 @@ export async function loadTools() {
 export const listToolsHandler = async () => { return { tools: tools }; };
 /** 调用某个工具 */
 export const callToolHandler = async (request: any) => {
+    const start = Date.now();
+    const toolName = request.params.name;
     try {
-        if (ToolHandler[request.params.name]) return await ToolHandler[request.params.name](request);
+        if (ToolHandler[toolName]) {
+            const result = await ToolHandler[toolName](request);
+            LogService.log({
+                ts: new Date().toISOString(),
+                tool: toolName,
+                args: request.params.arguments,
+                stat: 'success',
+                cost: Date.now() - start,
+            });
+            return result;
+        }
         throw new Error("Unknown tool");
     } catch (error: any) {
-        console.error("Tool execution error:", error);
+        LogService.log({
+            ts: new Date().toISOString(),
+            tool: toolName,
+            args: request.params.arguments,
+            stat: 'error',
+            err: error.message,
+            trace: error.stack,
+            cost: Date.now() - start,
+        });
         return {
             content: [
                 {
