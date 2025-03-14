@@ -1,60 +1,262 @@
-## 工具
+## 工具规范
 
-- **compress_tool**
-  - 压缩和提取 zip/tar/tar.gz 格式的文件
-  - 输入:
-    - `action` (string): 操作类型: 压缩或提取
-    - `sourcePath` (string): 源文件/目录的绝对路径
-    - `destinationPath` (string): 目标文件/目录的绝对路径
-    - `format` (string): 压缩格式: zip, tar, tar.gz
+### compress_tool
+**描述**: 使用 zip/tar/tar.gz 格式进行文件压缩和解压  
 
-- **create_note**
-  - 创建一个新笔记
-  - 输入:
-    - `title` (string): 笔记标题
-    - `content` (string): 笔记文本内容
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
+|-----------|------|----------|-------------|-------------|
+| action | string | 是 | 操作类型 | ["compress", "extract"] |
+| sourcePath | string | 是 | 源文件绝对路径 | - |
+| destinationPath | string | 是 | 目标路径绝对地址 | - | 
+| format | string | 是 | 压缩格式 | ["zip", "tar", "tar.gz"] |
 
-- **mongo_tool**
-  - 查询 MongoDB 数据
-  - 输入:
-    - `where` (string): JSON 字符串格式的查询条件。例如: {\"age\": {\"$gt\": 18}} 查找 18 岁以上的用户。
-    - `dbName` (string): 要查询的 MongoDB 数据库的名称。
-    - `collectionName` (string): 要查询的 MongoDB 集合的名称。
-    - `queryType` (string, optional): 要执行的 MongoDB 查询的类型。
-    - `data` (string, optional): 要插入的 JSON 字符串格式的数据。insertOne 和 insertMany 操作需要。
-    - `updateOperators` (string, optional): JSON 字符串格式的更新运算符。updateOne 和 updateMany 操作需要。
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: "text", text: string }>;
+  isError?: boolean;
+}
+```
 
-- **redis_tool**
-  - 操作 Redis 数据
-  - 输入:
-    - `command` (string): 要执行的 Redis 命令。
-    - `args` (string, optional): JSON 字符串格式的 Redis 命令的参数。
+**请求示例**:
+```json
+{
+  "action": "compress",
+  "sourcePath": "/path/to/files",
+  "destinationPath": "/path/to/archive.zip",
+  "format": "zip"
+}
+```
 
-- **schedule_tool**
-  - 管理计划任务，支持创建/取消/列表
-  - 输入:
-    - `action` (string): 操作类型
-    - `time` (string): 时间格式: weekly@EEE@HH:mm, monthly@DD@HH:mm, now+Nm (N 分钟后), now+Ns (N 秒后), once@YYYY-MM-DD HH:mm, once@HH:mm
-    - `message` (string): 提醒消息内容
-    - `id` (string, optional): 任务 ID (取消时需要)
-    - `tool_name` (string, optional): 要执行的工具的名称
-    - `tool_args` (object, optional): 工具参数
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段包含错误信息
 
-- **sftp_tool**
-  - 连接到 SSH 服务器并上传或下载文件
-  - 输入:
-    - `serverName` (string): 要连接的 SSH 服务器的名称。
-    - `action` (string): 要执行的操作: 'upload' 或 'download'。
-    - `localPath` (string): 本地文件路径。需要绝对路径。
-    - `remotePath` (string): 远程文件路径。
+---
 
-- **ssh_tool**
-  - 连接到 SSH 服务器并执行命令
-  - 输入:
-    - `serverName` (string): 要连接的 SSH 服务器的名称。
-    - `command` (string): 要在 SSH 服务器上执行的命令。
+### create_note
+**描述**: 创建并存储文本笔记  
 
-- **time_tool**
-  - 获取当前时间
-  - 输入:
-    - 无
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 |
+|-----------|------|----------|-------------|
+| title | string | 是 | 笔记标题 |
+| content | string | 是 | 笔记内容 |
+
+**输出规范**:
+```typescript
+{
+  content: [{
+    type: "text",
+    text: "笔记已创建: {note_id}"
+  }];
+}
+```
+
+**请求示例**:
+```json
+{
+  "title": "会议记录",
+  "content": "讨论项目需求"
+}
+```
+
+**错误情况**:
+- 存储失败时返回 `isError: true`
+
+---
+
+### mongo_tool
+**描述**: 执行 MongoDB 数据库的查询。
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 |
+|---|---|---|---|
+| where | string | 是 | JSON 字符串格式的查询条件。 例如: `{\\\"age\\\": {\\\"$gt\\\": 18}}` 查找 18 岁以上的用户。 |
+| dbName | string | 是 | 要查询的 MongoDB 数据库的名称。 |
+| collectionName | string | 是 | 要查询的 MongoDB 集合的名称。 |
+| queryType | string | 否 | 要执行的 MongoDB 查询的类型。 |
+| data | string | 否 | 要插入的 JSON 字符串格式的数据。insertOne 和 insertMany 操作需要。 |
+| updateOperators | string | 否 | JSON 字符串格式的更新运算符。updateOne 和 updateMany 操作需要。 |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "where": "{\\"age\\": {\\"$gt\\": 18}}",
+  "dbName": "users",
+  "collectionName": "profiles"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
+### redis_tool
+**描述**: 与 Redis 数据存储交互。
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 |
+|---|---|---|---|
+| command | string | 是 | 要执行的 Redis 命令。 |
+| args | string | 否 | JSON 字符串格式的 Redis 命令的参数。 |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "command": "GET",
+  "args": "{\\"key\\": \\"mykey\\"}"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
+### schedule_tool
+**描述**: 安排任务和提醒。
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
+|---|---|---|---|---|
+| action | string | 是 | 操作类型 | ["create", "cancel", "list", "cancel_all_once", "cancel_all_recurring"] |
+| time | string | 否 | 时间格式: weekly@EEE@HH:mm, monthly@DD@HH:mm, now+Nm (N 分钟后), now+Ns (N 秒后), once@YYYY-MM-DD HH:mm |  |
+| delaySeconds | number | 否 | 延迟执行的秒数 (例如 300 表示 5 分钟) |  |
+| interval | string | 否 | 循环间隔模式 (例如 'every@5m' 表示 5 分钟, 'every@30s' 表示 30 秒) |  |
+| toolName | string | 否 | 要执行的工具的名称 (例如 'time_tool') |  |
+| toolArgs | object | 否 | 目标工具的参数 |  |
+| id | string | 否 | 任务 ID (取消时需要) |  |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "action": "create",
+  "time": "now+5m",
+  "toolName": "time_tool",
+  "toolArgs": {}
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
+### sftp_tool
+**描述**: 上传和下载文件到/从 SSH 服务器。
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 |
+|---|---|---|---|
+| serverName | string | 是 | 要连接的 SSH 服务器的名称。 |
+| action | string | 是 | 要执行的操作: 'upload' 或 'download'。 |
+| localPath | string | 是 | 本地文件路径。需要绝对路径。 |
+| remotePath | string | 是 | 远程文件路径。 |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "serverName": "my_ssh_server",
+  "action": "upload",
+  "localPath": "/path/to/local/file",
+  "remotePath": "/path/to/remote/file"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
+### ssh_tool
+**描述**: 在 SSH 服务器上执行命令。
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 |
+|---|---|---|---|
+| serverName | string | 是 | 要连接的 SSH 服务器的名称。 |
+| command | string | 是 | 要在 SSH 服务器上执行的命令。 |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "serverName": "my_ssh_server",
+  "command": "ls -l"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
+### time_tool
+**描述**: 获取当前时间
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
+|---|---|---|---|---|
+| format | string | 否 | 要返回的时间格式 | ["iso", "timestamp", "local", "custom"] |
+| pattern | string | 否 | 当 format 为 custom 时，要使用的自定义格式模式。当 format 为 custom 时，是必需的。 |  |
+| timezone | string | 否 | 要使用的时区。默认为系统时区。示例: Asia/Shanghai |  |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "format": "iso",
+  "timezone": "Asia/Shanghai"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息

@@ -10,57 +10,13 @@ This TypeScript-based server acts as a toolbox, offering functionalities ranging
 
 [中文文档](README_ZH.md)
 
-[Tools](TOOL.md)
+[Tool Specifications](TOOL.md)
 
 ## Features
 
 ### Tools
 
-This server offers a diverse set of tools:
-
-- `create_note`: Creates and stores simple text notes.
-    - Input:
-        - `title` (string): Note title
-        - `content` (string): Note text content
-- `compress_tool`: Compresses and extracts files in zip, tar, and tar.gz formats.
-    - Input:
-        - `action` (string): Action type: compress or extract
-        - `sourcePath` (string): Absolute path to source file/directory
-        - `destinationPath` (string): Absolute path to destination file/directory
-        - `format` (string): Compression format: zip, tar, tar.gz
-- `mongo_tool`: Executes queries against MongoDB databases.
-    - Input:
-        - `where` (string): Query condition in JSON string format. For example: {\"age\": {\"$gt\": 18}} to find users over 18 years old.
-        - `dbName` (string): The name of the MongoDB database to query.
-        - `collectionName` (string): The name of the MongoDB collection to query.
-        - `queryType` (string, optional): The type of MongoDB query to execute.
-        - `data` (string, optional): Data to be inserted in JSON string format. Required for insertOne and insertMany operations.
-        - `updateOperators` (string, optional): Update operators in JSON string format. Required for updateOne and updateMany operations.
-- `redis_tool`: Interacts with Redis data stores.
-    - Input:
-        - `command` (string): The Redis command to execute.
-        - `args` (string, optional): Parameters of the Redis command in JSON string format.
-- `schedule_tool`: Schedules tasks and reminders.
-    - Input:
-        - `action` (string): Action type
-        - `time` (string): Time format: weekly@EEE@HH:mm, monthly@DD@HH:mm, now+Nm (N minutes later), now+Ns (N seconds later), once@YYYY-MM-DD HH:mm, once@HH:mm
-        - `message` (string): Reminder message content
-        - `id` (string, optional): Task ID (required for cancellation)
-        - `tool_name` (string, optional): Name of the tool to execute
-        - `tool_args` (object, optional): Tool parameters
-- `sftp_tool`: Uploads and downloads files to/from SSH servers.
-    - Input:
-        - `serverName` (string): The name of the SSH server to connect to.
-        - `action` (string): The action to perform: 'upload' or 'download'.
-        - `localPath` (string): Local file path. Absolute path is required.
-        - `remotePath` (string): Remote file path.
-- `ssh_tool`: Executes commands on SSH servers.
-    - Input:
-        - `serverName` (string): The name of the SSH server to connect to.
-        - `command` (string): The command to execute on the SSH server.
-- `time_tool`: Retrieves the current time.
-    - Input:
-        - None
+View the complete tool specifications and detailed documentation: [TOOL.md](TOOL.md)
 
 ### Resources
 
@@ -70,56 +26,18 @@ Resources are generated dynamically as a result of tool execution. For example, 
 
 - `summarize_notes`: Generates summaries of the notes created using the `create_note` tool.
 
-## Adding a New Tool
+## Development Guide
 
-To extend this MCP server with your own tools:
+### Adding New Tools
+View the complete development guide: [prompt.md](prompt.md)
 
-1.  Create a new TypeScript file within the `src/tool/` directory.
-2.  Implement your tool, ensuring it exports both:
-    - A `schema` object defining the tool's name, description, input parameters, and their types.
-    - A `default` asynchronous function that executes the tool's logic based on the provided input.
+Key steps summary:
+1. Create a tool file (my_tool.ts)
+2. Define the parameter schema (schema object)
+3. Implement the tool logic (default function)
+4. Compile and test the tool
 
-```typescript
-/** Parameters list of time_tool */
-export const schema = {
-    name: "time_tool",
-    description: "Get current time",
-    type: "object",
-    properties: {},
-    required: [],
-};
-
-export default async (request: any) => {
-    try {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        const currentTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: `Current time: ${currentTime}`,
-                },
-            ],
-        };
-    } catch (error: any) {
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: `Error getting time: ${error.message}`,
-                },
-            ],
-            isError: true
-        };
-    }
-};
-```
+[Detailed steps](prompt.md) include best practices for parameter validation, error handling, etc.
 
 ## Development
 
@@ -180,7 +98,7 @@ Then, connect to the server using Chrome DevTools by navigating to `chrome://ins
 
 2.  **MCP Inspector:** Utilize the [MCP Inspector](https://github.com/modelcontextprotocol/inspector), a dedicated debugging tool accessible via the `inspector` npm script:
 
-**VSCode Debugging**
+3.  **VSCode Debugging**
 
 To debug with VSCode, create a `.vscode/launch.json` file with the following configuration:
 

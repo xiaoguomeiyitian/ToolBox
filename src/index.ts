@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-/** 这是一个模板 MCP 服务器*/
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
