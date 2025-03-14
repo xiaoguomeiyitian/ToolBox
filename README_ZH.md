@@ -67,11 +67,12 @@ npm run watch
 -   Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 
 ```json
+// Cline MCP server configuration file
 {
   "command": "node",
   "args": [
     "--inspect=9229",
-    "e:/MCP/ToolBox/build/index.js"
+    "/MCP/ToolBox/build/index.js"
   ],
   "env": {
     "MONGO_URI": "",
@@ -83,6 +84,20 @@ npm run watch
   "autoApprove": []
 }
 ```
+
+## 核心价值
+
+🚀 **企业级自动化**  
+基于 package.json 配置，提供：
+- 全局 CLI 工具安装 (`tbx` 命令)
+- 工作流调度引擎 (node-cron 集成)
+- 多平台支持 (Windows/macOS)
+- 混合云部署能力 (MongoDB/Redis/SSH)
+
+🔧 **开发者友好**  
+- 强类型 TypeScript 实现
+- 实时调试支持 (--inspect flag)
+- VSCode 调试配置模板
 
 ## 调试
 

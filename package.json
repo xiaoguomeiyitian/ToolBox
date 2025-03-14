@@ -1,11 +1,31 @@
 {
   "name": "@xiaoguomeiyitian/toolbox",
   "version": "0.1.0",
-  "description": "A Model Context Protocol server",
-  "private": true,
+  "description": "A Model Context Protocol server implementation providing automation tools and workflow management",
+  "private": false,
+  "license": "MIT",
   "type": "module",
   "bin": {
-    "ToolBox": "./build/index.js"
+    "tbx": "./build/index.js"
+  },
+  "preferGlobal": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "cli",
+    "automation",
+    "toolbox",
+    "workflow"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xiaoguomeiyitian/ToolBox.git"
+  },
+  "homepage": "https://github.com/xiaoguomeiyitian/ToolBox#readme",
+  "bugs": {
+    "url": "https://github.com/xiaoguomeiyitian/ToolBox/issues"
   },
   "files": [
     "build"

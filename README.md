@@ -1,4 +1,5 @@
-# ToolBox MCP Server
+# ToolBox MCP Server 
+[![GitHub Repository](https://img.shields.io/badge/Repo-ToolBox_MCP_Server-blue?logo=github)](https://github.com/xiaoguomeiyitian/ToolBox)
 
 A versatile Model Context Protocol (MCP) server providing a collection of tools for various tasks.
 
@@ -59,6 +60,11 @@ For development with auto-rebuild:
 npm run watch
 ```
 
+## Marketplace Submission
+
+![ToolBox Logo](logo/ToolBox_logo.png)
+*A Seamless Integrated Automation Toolkit for Claude Desktop*
+
 ## Installation
 
 To integrate with the Claude Desktop application, add the following server configuration to:
@@ -67,11 +73,12 @@ To integrate with the Claude Desktop application, add the following server confi
 -   Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 
 ```json
+// Cline MCP server configuration file
 {
   "command": "node",
   "args": [
     "--inspect=9229",
-    "e:/MCP/ToolBox/build/index.js"
+    "/MCP/ToolBox/build/index.js"
   ],
   "env": {
     "MONGO_URI": "",
@@ -83,6 +90,20 @@ To integrate with the Claude Desktop application, add the following server confi
   "autoApprove": []
 }
 ```
+
+## Core Values
+
+🚀 **Enterprise-Grade Automation**  
+Leveraging package.json configuration, providing:
+- Global CLI tool installation (`tbx` command)
+- Workflow scheduling engine (node-cron integration)
+- Multi-platform support (Windows/macOS)
+- Hybrid cloud deployment capabilities (MongoDB/Redis/SSH)
+
+🔧 **Developer-Friendly**  
+- Strongly-typed TypeScript implementation
+- Real-time debugging support (--inspect flag)
+- VSCode debugging configuration template
 
 ## Debugging
 
