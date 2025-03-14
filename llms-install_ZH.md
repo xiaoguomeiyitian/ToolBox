@@ -21,11 +21,13 @@ node ./build/index.js --health-check
 ```
 
 ## 密钥配置
-在Claude配置文件中替换以下占位符：
+在Claude/Cline配置文件中替换以下占位符：
 ```json
 "env": {
   "MONGO_URI": "mongodb://user:password@host:port/db",
-  "REDIS_URI": "redis://:password@host:port"
+  "MONGO_INDEX_OPS": "true",
+  "REDIS_URI": "redis://:password@host:port",
+  "SSH_server1_URI": "username:password@host:port"
 }
 ```
 

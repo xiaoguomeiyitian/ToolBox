@@ -75,10 +75,10 @@ npm run watch
     "/MCP/ToolBox/build/index.js"
   ],
   "env": {
-    "MONGO_URI": "",
+    "MONGO_URI": "mongodb://user:password@host:port/db",
     "MONGO_INDEX_OPS": "true",
-    "REDIS_URI": "",
-    "SSH_server1_URI": ""
+    "REDIS_URI": "redis://:password@host:port",
+    "SSH_server1_URI": "username:password@host:port"
   },
   "disabled": false,
   "autoApprove": []

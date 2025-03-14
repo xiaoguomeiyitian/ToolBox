@@ -21,11 +21,13 @@ node ./build/index.js --health-check
 ```
 
 ## Key Configuration
-Replace the following placeholders in the Claude configuration file:
+Replace the following placeholders in the Claude/Cline configuration file:
 ```json
 "env": {
   "MONGO_URI": "mongodb://user:password@host:port/db",
-  "REDIS_URI": "redis://:password@host:port"
+  "MONGO_INDEX_OPS": "true",
+  "REDIS_URI": "redis://:password@host:port",
+  "SSH_server1_URI": "username:password@host:port"
 }
 ```
 
