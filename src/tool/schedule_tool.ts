@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { LogService } from '../logService.js';
-import { tasksFilePath, ToolHandler } from '../index.js';
+import { tasksFilePath } from '../index.js';
+import { callToolHandler } from '../handler/ToolHandler.js';
 
 type ScheduledTask = {
     id: string;
@@ -91,32 +91,10 @@ function cancelTask(id: string) {
 
 // 执行定时器
 async function executeTask(task: ScheduledTask) {
-    const start = Date.now();
-    try {
-        await ToolHandler[task.toolName]({ params: { arguments: task.toolArgs } });
-        task.executed = true;
-        task.lastExecutionTime = new Date().toISOString();
-        saveTasks();
-        LogService.log({
-            ts: new Date().toISOString(),
-            tool: task.toolName,
-            args: task.toolArgs,
-            stat: 'success',
-            cost: Date.now() - start,
-            tid: task.id
-        });
-    } catch (error: any) {
-        LogService.log({
-            ts: new Date().toISOString(),
-            tool: task.toolName,
-            args: task.toolArgs,
-            stat: 'error',
-            err: error.message,
-            trace: error.stack,
-            cost: Date.now() - start,
-            tid: task.id
-        });
-    }
+    await callToolHandler({ params: { name: task.toolName, arguments: task.toolArgs } }, 'schedule_tool_' + task.id);
+    task.executed = true;
+    task.lastExecutionTime = new Date().toISOString();
+    saveTasks();
 }
 
 // 调度定时任务

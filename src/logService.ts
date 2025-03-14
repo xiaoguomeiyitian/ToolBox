@@ -5,18 +5,16 @@ import { logFile } from './index.js';
 interface LogEntry {
   ts: string;
   tool: string;
+  caller?: string;
   args: any;
   stat: string;
   cost?: number;
   err?: string;
   trace?: string;
-  tid?: string;
-  trigTs?: string;
 }
 
 export class LogService {
   static log(logEntry: LogEntry) {
-    const logString = JSON.stringify(logEntry) + os.EOL;
-    fs.appendFile(logFile, logString, (err) => { });
+    fs.appendFile(logFile, JSON.stringify(logEntry) + os.EOL, { encoding: 'utf8' }, (err) => { });
   }
 }

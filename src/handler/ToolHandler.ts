@@ -1,8 +1,9 @@
 import path from 'path';
-import { toolDir, toolFiles, ToolHandler } from '../index.js';
+import { toolDir, toolFiles } from '../index.js';
 import { LogService } from '../logService.js';
 
 const tools: any[] = [];
+const ToolHandler: { [key: string]: any } = {};
 
 export async function loadTools() {
     for (const file of toolFiles) {
@@ -29,7 +30,7 @@ export async function loadTools() {
 /** 所有工具列表 */
 export const listToolsHandler = async () => { return { tools: tools }; };
 /** 调用某个工具 */
-export const callToolHandler = async (request: any) => {
+export const callToolHandler = async (request: any, caller: string) => {
     const start = Date.now();
     const toolName = request.params.name;
     try {
@@ -38,6 +39,7 @@ export const callToolHandler = async (request: any) => {
             LogService.log({
                 ts: new Date().toISOString(),
                 tool: toolName,
+                caller: caller,
                 args: request.params.arguments,
                 stat: 'success',
                 cost: Date.now() - start,
@@ -66,5 +68,3 @@ export const callToolHandler = async (request: any) => {
         };
     }
 };
-
-export { ToolHandler };

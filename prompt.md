@@ -23,8 +23,36 @@ Here are the detailed steps and precautions for adding a new tool:
     *   **Precautions:**
         *   The `request.params.arguments` object contains the parameters passed by the client.
         *   The parameters should be validated to ensure that the type and value of the parameters meet expectations.
-        *   If an error occurs during tool execution, the Promise should be rejected and an object containing `isError: true` should be returned.
-        *   The `content` array can contain multiple objects to return multiple results.
+    *   If an error occurs during tool execution, the Promise should be rejected and an object containing `isError: true` should be returned.
+    *   The `content` array can contain multiple objects to return multiple results.
+    *   Tools can call other tools through the `callToolHandler` function:
+        ```typescript
+        await callToolHandler(
+          { 
+            params: { 
+              name: "target_tool_name",
+              arguments: { key: "value" }
+            }
+          },
+          "caller_identifier"
+        );
+        ```
+        - First parameter: Request object containing the tool name and parameters
+        - Second parameter: Unique identifier of the caller for log tracing
+        - The called tool will record the call chain information:
+          ```json
+          {
+            "caller": "caller_identifier",
+            "tool": "target_tool_name",
+            "tid": "Associated task ID (optional)"
+          }
+          ```
+        - The call chain identifier should follow the `<parent tool name>_<unique suffix>` format, for example:
+          ```typescript
+          // Scheduled task call example
+          `schedule_tool_${task.id}`
+          ```
+        - Multi-level calls will automatically form a complete call chain, and the complete execution path can be traced through log fields
 
 4.  **Dynamic Loading:**
     *   Files in the `tool` directory are dynamically loaded, so after adding a new tool file, there is no need to modify the `src/index.ts` and `src/handler/ToolHandler.ts` files.
@@ -48,10 +76,10 @@ Key log entry fields description (original → optimized):
 | Original Field | Optimized Field | Description                          |
 |----------------|-----------------|--------------------------------------|
 | timestamp      | ts              | Event timestamp (ISO 8601 format)    |
-| params         | args            | Tool execution parameters            | 
+| params         | args            | Tool execution parameters            |
 | status         | stat            | Execution status (success/error)     |
 | duration       | cost            | Operation duration in milliseconds   |
 | error          | err             | Error message (if any)               |
 | stack          | trace           | Error stack trace (if any)           |
 | taskId         | tid             | Scheduled task unique identifier     |
-| triggerTime    | trigTs          | Scheduled task trigger timestamp     |
+| caller         | caller          | Call chain source identifier         |

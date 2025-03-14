@@ -23,8 +23,36 @@
     *   **注意事项：**
         *   `request.params.arguments` 对象包含客户端传递的参数。
         *   应该对参数进行验证，确保参数的类型和值符合预期。
-        *   如果工具执行出错，应该 reject Promise，并返回一个包含 `isError: true` 的对象。
+    *   如果工具执行出错，应该 reject Promise，并返回一个包含 `isError: true` 的对象。
         *   `content` 数组可以包含多个对象，用于返回多个结果。
+    *   工具之间可以通过 `callToolHandler` 函数调用其他工具:
+        ```typescript
+        await callToolHandler(
+          { 
+            params: { 
+              name: "target_tool_name",
+              arguments: { key: "value" }
+            }
+          },
+          "caller_identifier"
+        );
+        ```
+        - 第一个参数: 包含工具名称和参数的请求对象
+        - 第二个参数: 调用方唯一标识符，用于日志追踪
+        - 被调用工具会记录调用链信息：
+          ```json
+          {
+            "caller": "caller_identifier",
+            "tool": "target_tool_name",
+            "tid": "Associated task ID (optional)"
+          }
+          ```
+        - 调用链标识符应遵循 `<父工具名>_<唯一后缀>` 格式，例如：
+          ```typescript
+          // Scheduled task call example
+          `schedule_tool_${task.id}`
+          ```
+        - 多级调用会自动形成完整调用链，可通过日志字段追溯完整执行路径
 
 4.  **动态加载：**
     *   `tool` 目录下的文件会被动态加载，因此添加新的工具文件后，无需修改 `src/index.ts` 和 `src/handler/ToolHandler.ts` 文件。
@@ -54,4 +82,4 @@
 | error          | err            | 错误信息(若有)             |
 | stack          | trace          | 错误堆栈(若有)             |
 | taskId         | tid            | 定时任务唯一标识            |
-| triggerTime    | trigTs         | 定时任务触发时间            |
+| caller         | caller          | 调用链源头标识            |
