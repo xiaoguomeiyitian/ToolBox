@@ -81,5 +81,5 @@
 | duration       | cost           | 操作耗时(毫秒)             |
 | error          | err            | 错误信息(若有)             |
 | stack          | trace          | 错误堆栈(若有)             |
-| taskId         | tid            | 定时任务唯一标识            |
 | caller         | caller          | 调用链源头标识            |
+| tool           | tool          | 工具名称         |

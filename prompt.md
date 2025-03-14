@@ -81,5 +81,5 @@ Key log entry fields description (original → optimized):
 | duration       | cost            | Operation duration in milliseconds   |
 | error          | err             | Error message (if any)               |
 | stack          | trace           | Error stack trace (if any)           |
-| taskId         | tid             | Scheduled task unique identifier     |
 | caller         | caller          | Call chain source identifier         |
+| tool           | tool          | Tool name         |
