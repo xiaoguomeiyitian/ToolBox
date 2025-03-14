@@ -1,4 +1,4 @@
-import { notes } from "./tool/create_note.js";
+import { notes } from "../tool/create_note.js";
 
 /** 所有提示词列表 */
 export const listPromptsHandler = async () => {

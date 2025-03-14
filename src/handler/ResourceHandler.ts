@@ -1,4 +1,4 @@
-import { notes } from "./tool/create_note.js";
+import { notes } from "../tool/create_note.js";
 
 /** 所有资源列表 */
 export const listResourcesHandler = async () => {

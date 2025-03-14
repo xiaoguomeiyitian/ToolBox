@@ -85,10 +85,8 @@ export default async (request: any) => {
 
             sshConnections[serverName] = new Client();
             sshConnections[serverName].on('ready', () => {
-                console.log(`SSH connection established to ${serverName}`);
                 performSftpAction(action, localPath, remotePath, resolve, reject, sshConnections[serverName]);
             }).on('error', (err: any) => {
-                console.error(`SSH connection error to ${serverName}:`, err);
                 delete sshConnections[serverName];
                 reject({
                     content: [
@@ -100,7 +98,6 @@ export default async (request: any) => {
                     isError: true,
                 });
             }).on('end', () => {
-                console.log(`SSH connection closed to ${serverName}`);
                 delete sshConnections[serverName];
             }).connect({
                 host: host,
@@ -112,7 +109,6 @@ export default async (request: any) => {
             performSftpAction(action, localPath, remotePath, resolve, reject, sshConnections[serverName]);
         }
     }).catch((error: any) => {
-        console.error("SSH Promise error:", error);
         return {
             content: [
                 {
@@ -128,7 +124,6 @@ export default async (request: any) => {
 async function performSftpAction(action: string, localPath: string, remotePath: string, resolve: any, reject: any, conn: any) {
     conn.sftp(async (err, sftp) => {
         if (err) {
-            console.error('SFTP error:', err);
             reject({
                 content: [
                     {
@@ -148,13 +143,11 @@ async function performSftpAction(action: string, localPath: string, remotePath: 
                 try {
                     await sftp.stat(remoteDir);
                 } catch (err) {
-                    console.log(`Creating remote directory ${remoteDir}`);
                     await sftp.mkdir(remoteDir, { recursive: true });
                 }
 
                 sftp.fastPut(localPath, remotePath, {}, (err) => {
                     if (err) {
-                        console.error('SFTP upload error:', err);
                         reject({
                             content: [
                                 {
@@ -182,13 +175,11 @@ async function performSftpAction(action: string, localPath: string, remotePath: 
                 try {
                     await fs.stat(localDir);
                 } catch (err) {
-                    console.log(`Creating local directory ${localDir}`);
                     await fs.mkdir(localDir, { recursive: true });
                 }
 
                 sftp.fastGet(remotePath, localPath, {}, (err) => {
                     if (err) {
-                        console.error('SFTP download error:', err);
                         reject({
                             content: [
                                 {
@@ -223,7 +214,6 @@ async function performSftpAction(action: string, localPath: string, remotePath: 
                 sftp.end();
             }
         } catch (error: any) {
-            console.error("SFTP operation error:", error);
             reject({
                 content: [
                     {

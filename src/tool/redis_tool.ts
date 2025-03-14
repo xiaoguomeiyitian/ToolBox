@@ -56,14 +56,26 @@ export default async (request: any) => {
     try {
         const command = String(request.params.arguments?.command);
         const argsString = request.params.arguments?.args;
-        const args = argsString ? JSON.parse(argsString) : [];
+        let args = [];
+        try {
+            args = argsString ? JSON.parse(argsString) : [];
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: JSON.stringify({ error: "Invalid JSON format for args" }),
+                    },
+                ],
+                isError: true,
+            };
+        }
 
         let results: any;
 
         try {
             results = await redisClient.call(command, ...args);
         } catch (error: any) {
-            console.error("Redis command error:", error);
             const errorResponse = {
                 error: {
                     code: error.code,
@@ -90,7 +102,6 @@ export default async (request: any) => {
             ],
         };
     } catch (error: any) {
-        console.error("Redis query error:", error);
         let errorMessage = "Redis query error";
         let errorCode = "UNKNOWN_ERROR";
 

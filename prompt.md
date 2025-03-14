@@ -27,7 +27,7 @@ Here are the detailed steps and precautions for adding a new tool:
         *   The `content` array can contain multiple objects to return multiple results.
 
 4.  **Dynamic Loading:**
-    *   Files in the `tool` directory are dynamically loaded, so after adding a new tool file, there is no need to modify the `src/index.ts` and `src/ToolHandler.ts` files.
+    *   Files in the `tool` directory are dynamically loaded, so after adding a new tool file, there is no need to modify the `src/index.ts` and `src/handler/ToolHandler.ts` files.
 
 5.  **Compile Files:**
     *   After adding or modifying the code, you need to compile the files. You can use the `npm run build` command to compile the files.
@@ -39,3 +39,19 @@ Here are the detailed steps and precautions for adding a new tool:
 7.  **Restart the MCP Server:**
     *   After compiling the files, you need to restart the MCP server for the new tool to take effect.
     *   Please manually restart the MCP server.
+
+## Logging Specifications
+
+**Log file path:** `./log/ToolBox.log`
+
+Key log entry fields description (original → optimized):
+| Original Field | Optimized Field | Description                          |
+|----------------|-----------------|--------------------------------------|
+| timestamp      | ts              | Event timestamp (ISO 8601 format)    |
+| params         | args            | Tool execution parameters            | 
+| status         | stat            | Execution status (success/error)     |
+| duration       | cost            | Operation duration in milliseconds   |
+| error          | err             | Error message (if any)               |
+| stack          | trace           | Error stack trace (if any)           |
+| taskId         | tid             | Scheduled task unique identifier     |
+| triggerTime    | trigTs          | Scheduled task trigger timestamp     |

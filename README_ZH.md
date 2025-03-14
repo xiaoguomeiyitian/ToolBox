@@ -108,7 +108,6 @@ export default async (request: any) => {
             ],
         };
     } catch (error: any) {
-        console.error(`Error getting time: ${error}`);
         return {
             content: [
                 {
@@ -158,6 +157,7 @@ npm run watch
   ],
   "env": {
     "MONGO_URI": "",
+    "MONGO_INDEX_OPS": "true",
     "REDIS_URI": "",
     "SSH_server1_URI": ""
   },

@@ -71,10 +71,8 @@ export default async (request: any) => {
 
             sshConnections[serverName] = new Client();
             sshConnections[serverName].on('ready', () => {
-                console.log(`SSH connection established to ${serverName}`);
                 executeCommand(request.params.arguments.command, resolve, reject, sshConnections[serverName]);
             }).on('error', (err: any) => {
-                console.error(`SSH connection error to ${serverName}:`, err);
                 delete sshConnections[serverName];
                 reject({
                     content: [
@@ -86,7 +84,6 @@ export default async (request: any) => {
                     isError: true,
                 });
             }).on('end', () => {
-                console.log(`SSH connection closed to ${serverName}`);
                 delete sshConnections[serverName];
             }).connect({
                 host: host,
@@ -98,7 +95,6 @@ export default async (request: any) => {
             executeCommand(request.params.arguments.command, resolve, reject, sshConnections[serverName]);
         }
     }).catch((error) => {
-        console.error("SSH Promise error:", error);
         return {
             content: [
                 {
@@ -114,7 +110,6 @@ export default async (request: any) => {
 function executeCommand(command: string, resolve: any, reject: any, conn: any) {
     conn.exec(command, (err, stream) => {
         if (err) {
-            console.error('SSH command execution error:', err);
             reject({
                 content: [
                     {
@@ -141,7 +136,6 @@ function executeCommand(command: string, resolve: any, reject: any, conn: any) {
         }).stderr.on('data', (data: any) => {
             output += 'ERROR: ' + data;
         }).on('error', (err: any) => {
-            console.error('SSH command execution error:', err);
             reject({
                 content: [
                     {
