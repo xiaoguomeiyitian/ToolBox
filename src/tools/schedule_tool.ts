@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { tasksFilePath } from '../index.js';
+import { tasksFilePath } from '../config.js';
 import { callToolHandler } from '../handler/ToolHandler.js';
 
 type ScheduledTask = {

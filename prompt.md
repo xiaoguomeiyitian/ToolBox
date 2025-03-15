@@ -2,7 +2,7 @@
 
 Here are the detailed steps and precautions for adding a new tool:
 
-1.  **Create a Tool File:** Create a new TypeScript file (e.g., `my_tool.ts`) in the `src/tool/` directory.
+1.  **Create a Tool File:** Create a new TypeScript file (e.g., `my_tool.ts`) in the `src/tools/` directory.
 
 2.  **Define the Parameter List (schema):**
     *   In this file, export a `schema` object to describe the tool's parameters.
@@ -55,7 +55,7 @@ Here are the detailed steps and precautions for adding a new tool:
         - Multi-level calls will automatically form a complete call chain, and the complete execution path can be traced through log fields
 
 4.  **Dynamic Loading:**
-    *   Files in the `tool` directory are dynamically loaded, so after adding a new tool file, there is no need to modify the `src/index.ts` and `src/handler/ToolHandler.ts` files.
+    *   Files in the `tools` directory are dynamically loaded, so after adding a new tool file, there is no need to modify the `src/index.ts` and `src/handler/ToolHandler.ts` files.
 
 5.  **Compile Files:**
     *   After adding or modifying the code, you need to compile the files. You can use the `npm run build` command to compile the files.

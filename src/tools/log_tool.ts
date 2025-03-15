@@ -1,6 +1,6 @@
 import fs from 'fs';
 import readline from 'readline';
-import { logFile } from '../index.js';
+import { logFile } from '../config.js';
 
 export const schema = {
   name: 'log_tool',

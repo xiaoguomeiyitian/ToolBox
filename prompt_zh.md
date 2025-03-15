@@ -2,7 +2,7 @@
 
 以下是添加新工具的详细步骤和注意事项：
 
-1.  **创建工具文件：** 在 `src/tool/` 目录下创建一个新的 TypeScript 文件 (例如: `my_tool.ts`)。
+1.  **创建工具文件：** 在 `src/tools/` 目录下创建一个新的 TypeScript 文件 (例如: `my_tool.ts`)。
 
 2.  **定义参数列表 (schema)：**
     *   在该文件中，导出一个 `schema` 对象，用于描述工具的参数。
@@ -55,7 +55,7 @@
         - 多级调用会自动形成完整调用链，可通过日志字段追溯完整执行路径
 
 4.  **动态加载：**
-    *   `tool` 目录下的文件会被动态加载，因此添加新的工具文件后，无需修改 `src/index.ts` 和 `src/handler/ToolHandler.ts` 文件。
+    *   `tools` 目录下的文件会被动态加载，因此添加新的工具文件后，无需修改 `src/index.ts` 和 `src/handler/ToolHandler.ts` 文件。
 
 5.  **编译文件：**
     *   添加或修改代码后，需要编译文件。可以使用 `npm run build` 命令编译文件。

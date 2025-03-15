@@ -1,6 +1,6 @@
 import fs from 'fs';
 import os from 'os';
-import { logFile } from './index.js';
+import { logFile } from './config.js';
 
 interface LogEntry {
   ts: string;

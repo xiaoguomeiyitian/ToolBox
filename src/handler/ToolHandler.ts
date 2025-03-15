@@ -1,15 +1,16 @@
 import fs from 'fs';
 import path from 'path';
-import { toolDir } from '../index.js';
+import { toolsDir } from '../config.js';
 import { LogService } from '../logService.js';
 
+let isload: boolean = false;
 const tools: any[] = [];
 const ToolHandler: { [key: string]: any } = {};
 
 export async function loadTools() {
-    const toolFiles = fs.readdirSync(toolDir).filter(file => file.endsWith('.js'));
+    const toolFiles = fs.readdirSync(toolsDir).filter(file => file.endsWith('.js'));
     for (const file of toolFiles) {
-        const toolPath = path.join(toolDir, file);
+        const toolPath = path.join(toolsDir, file);
         try {
             const { default: tool, schema } = await import('file://' + toolPath);
             const toolName = path.parse(toolPath).name;
@@ -27,11 +28,13 @@ export async function loadTools() {
             console.error(`Failed to load tool ${file}:`, error);
         }
     }
+    isload = true;
 }
 /** 所有工具列表 */
 export const listToolsHandler = async () => { return { tools: tools }; };
 /** 调用某个工具 */
 export const callToolHandler = async (request: any, caller: string) => {
+    if (!isload) await loadTools();//如果工具没有加载则先加载工具
     const start = Date.now();
     const toolName = request.params.name;
     try {
