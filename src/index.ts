@@ -46,8 +46,7 @@ function setupGracefulShutdown(transport: StdioServerTransport) {
   const shutdown = async () => {
     console.log('Shutting down gracefully...');
     try {
-      // 由于Server没有disconnect方法，我们可以直接关闭进程
-      // 如果transport有close或disconnect方法，可以在这里调用
+      transport.close();
       console.log('Server shutting down');
       process.exit(0);
     } catch (error) {
