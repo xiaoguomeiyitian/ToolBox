@@ -4,10 +4,22 @@
         {
             "type": "node",
             "request": "attach",
-            "name": "ToolBox",
+            "name": "attach",
             "address": "localhost",
             "port": 9229,
             "localRoot": "${workspaceFolder}"
-        }
+        },
+        {
+            "name": "node",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/index.js",
+            "cwd": "${workspaceFolder}/build",
+            "console": "internalConsole",
+            "runtimeArgs": [
+                "--inspect"
+            ],
+            "args": []
+        },
     ]
 }

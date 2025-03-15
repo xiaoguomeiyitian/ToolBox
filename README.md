@@ -109,6 +109,20 @@ Leveraging package.json configuration, providing:
 
 Debugging MCP servers can be challenging due to their stdio communication. Here are a few approaches:
 
+🚧 Disclaimers
+
+### Sensitive Data
+DO NOT CONFIGURE CONTAINERS WITH SENSITIVE DATA. This includes API keys, database passwords, etc.
+
+Any sensitive data exchanged with the LLM is inherently compromised, unless the LLM is running on your local machine.
+
+### Legal Liability ⚠️
+- ⚠️ The tool is provided "as-is" under MIT License without warranties  
+- ⚠️ Developer not liable for direct/indirect damages  
+- ⚠️ Users bear all risks from improper container configurations  
+- ⚠️ Any illegal or destructive usage is strictly prohibited  
+- ⚠️ See [LICENSE](LICENSE) for full terms   
+
 1.  **Node.js Inspector:** Launch the server with the `--inspect=9229` flag:
 
 ```bash

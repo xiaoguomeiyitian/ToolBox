@@ -1,16 +1,18 @@
+import fs from 'fs';
 import path from 'path';
-import { toolDir, toolFiles } from '../index.js';
+import { toolDir } from '../index.js';
 import { LogService } from '../logService.js';
 
 const tools: any[] = [];
 const ToolHandler: { [key: string]: any } = {};
 
 export async function loadTools() {
+    const toolFiles = fs.readdirSync(toolDir).filter(file => file.endsWith('.js'));
     for (const file of toolFiles) {
         const toolPath = path.join(toolDir, file);
         try {
             const { default: tool, schema } = await import('file://' + toolPath);
-            const toolName = path.basename(file, path.extname(file));
+            const toolName = path.parse(toolPath).name;
 
             tools.push({
                 name: toolName,
@@ -25,7 +27,6 @@ export async function loadTools() {
             console.error(`Failed to load tool ${file}:`, error);
         }
     }
-    return ToolHandler;
 }
 /** 所有工具列表 */
 export const listToolsHandler = async () => { return { tools: tools }; };

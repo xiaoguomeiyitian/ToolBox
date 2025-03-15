@@ -17,8 +17,8 @@ import { listResourcesHandler, readResourceHandler } from "./handler/ResourceHan
 import { listToolsHandler, callToolHandler, loadTools } from "./handler/ToolHandler.js";
 import { getPromptHandler, listPromptsHandler } from "./handler/PromptHandler.js";
 
+//工具目录
 export const toolDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'tool');
-export const toolFiles = fs.readdirSync(toolDir).filter(file => file.endsWith('.js') || file.endsWith('.ts'));
 //log目录
 const logDirectory = path.join(path.dirname(fileURLToPath(import.meta.url)), 'log');
 if (!fs.existsSync(logDirectory)) fs.mkdirSync(logDirectory, { recursive: true });
