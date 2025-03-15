@@ -67,17 +67,25 @@
 ---
 
 ### mongo_tool
-**Description**: Executes queries against MongoDB databases.
+**Description**: Comprehensive MongoDB operations tool supporting queries, aggregations, CRUD operations, and index management
 
 **Input Schema**:
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| where | string | Yes | Query condition in JSON string format.  For example: `{\\\"age\\\": {\\\"$gt\\\": 18}}` to find users over 18 years old. |
-| dbName | string | Yes | The name of the MongoDB database to query. |
-| collectionName | string | Yes | The name of the MongoDB collection to query. |
-| queryType | string | No | The type of MongoDB query to execute. |
-| data | string | No | Data to be inserted in JSON string format. Required for insertOne and insertMany operations. |
-| updateOperators | string | No | Update operators in JSON string format. Required for updateOne and updateMany operations. |
+| Parameter | Type | Required | Description | Enum Values |
+|---|---|---|---|---|
+| where | string | No | Query condition in JSON string format. Example: {\"age\": {\"$gt\": 18}} to find users older than 18. |  |
+| dbName | string | Yes | The name of the MongoDB database to query. |  |
+| collectionName | string | No | The name of the MongoDB collection to query. |  |
+| field | string | No | Field name for distinct operation. |  |
+| queryType | string | No | The type of MongoDB query to execute. | ["find", "findOne", "aggregate", "count", "distinct", "insertOne", "updateOne", "deleteOne", "insertMany", "updateMany", "deleteMany", "bulkWrite", "estimatedDocumentCount", "findOneAndUpdate", "findOneAndDelete", "findOneAndReplace"] |
+| data | string | No | Data to be inserted/updated in JSON string format. Required for insert/update operations. |  |
+| updateOperators | string | No | Update operators in JSON string format. Required for update operations. |  |
+| options | string | No | Additional options in JSON string format (e.g., sort, limit, skip, projection). |  |
+| operationType | string | No | Database operation type for index and collection management | ["createIndex", "createIndexes", "dropIndex", "dropIndexes", "listIndexes", "listCollections", "createCollection", "dropCollection", "renameCollection", "collStats", "dbStats"] |
+| indexes | string | No | Index specification JSON for index operations |  |
+| indexOptions | string | No | Index options in JSON string format (e.g., unique, sparse, expireAfterSeconds) |  |
+| pipeline | string | No | Aggregation pipeline stages in JSON string format. Required for aggregate operations. |  |
+| newName | string | No | New name for renameCollection operation |  |
+| bulkOperations | string | No | Array of bulk write operations in JSON string format. Required for bulkWrite operation. |  |
 
 **Output Schema**:
 ```typescript
@@ -90,9 +98,11 @@
 **Example Request**:
 ```json
 {
-  "where": "{\\"age\\": {\\"$gt\\": 18}}",
-  "dbName": "users",
-  "collectionName": "profiles"
+  "dbName": "your_db",
+  "collectionName": "your_collection",
+  "queryType": "find",
+  "where": "{\\"status\\": \\"active\\"}",
+  "options": "{\\"limit\\": 10}"
 }
 ```
 
@@ -102,13 +112,13 @@
 ---
 
 ### redis_tool
-**Description**: Interacts with Redis data stores.
+**Description**: Execute any Redis command, fully supporting all Redis operations, including strings, hashes, lists, sets, sorted sets, streams, etc.
 
 **Input Schema**:
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| command | string | Yes | The Redis command to execute. |
-| args | string | No | Parameters of the Redis command in JSON string format. |
+| command | string | Yes | The Redis command to execute (e.g., 'GET', 'SET', 'HGETALL', 'LPUSH', 'ZADD', etc.). |
+| args | string | No | The arguments for the Redis command, provided in JSON string format. For example, for SET: '[\"key\", \"value\"]', for HSET: '[\"hash\", \"field\", \"value\"]'. |
 
 **Output Schema**:
 ```typescript
@@ -121,8 +131,8 @@
 **Example Request**:
 ```json
 {
-  "command": "GET",
-  "args": "{\\"key\\": \\"mykey\\"}"
+    "command": "SET",
+    "args": "[\"mykey\", \"myvalue\"]"
 }
 ```
 

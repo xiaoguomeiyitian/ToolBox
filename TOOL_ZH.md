@@ -67,17 +67,25 @@
 ---
 
 ### mongo_tool
-**描述**: 执行 MongoDB 数据库的查询。
+**描述**: 综合 MongoDB 操作工具，支持查询、聚合、CRUD 操作和索引管理
 
 **输入规范**:
-| 参数 | 类型 | 必填 | 描述 |
-|---|---|---|---|
-| where | string | 是 | JSON 字符串格式的查询条件。 例如: `{\\\"age\\\": {\\\"$gt\\\": 18}}` 查找 18 岁以上的用户。 |
-| dbName | string | 是 | 要查询的 MongoDB 数据库的名称。 |
-| collectionName | string | 是 | 要查询的 MongoDB 集合的名称。 |
-| queryType | string | 否 | 要执行的 MongoDB 查询的类型。 |
-| data | string | 否 | 要插入的 JSON 字符串格式的数据。insertOne 和 insertMany 操作需要。 |
-| updateOperators | string | 否 | JSON 字符串格式的更新运算符。updateOne 和 updateMany 操作需要。 |
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
+|---|---|---|---|---|
+| where | string | 否 | JSON 字符串格式的查询条件。 例如: {\"age\": {\"$gt\": 18}} 查找 18 岁以上的用户。 |  |
+| dbName | string | 是 | 要查询的 MongoDB 数据库的名称。 |  |
+| collectionName | string | 否 | 要查询的 MongoDB 集合的名称。 |  |
+| field | string | 否 | distinct 操作的字段名称。 |  |
+| queryType | string | 否 | 要执行的 MongoDB 查询的类型。 | ["find", "findOne", "aggregate", "count", "distinct", "insertOne", "updateOne", "deleteOne", "insertMany", "updateMany", "deleteMany", "bulkWrite", "estimatedDocumentCount", "findOneAndUpdate", "findOneAndDelete", "findOneAndReplace"] |
+| data | string | 否 | 要插入/更新的 JSON 字符串格式的数据。insert/update 操作需要。 |  |
+| updateOperators | string | 否 | JSON 字符串格式的更新运算符。update 操作需要。 |  |
+| options | string | 否 | JSON 字符串格式的附加选项 (例如，sort、limit、skip、projection)。 |  |
+| operationType | string | 否 | 索引和集合管理的数据库操作类型 | ["createIndex", "createIndexes", "dropIndex", "dropIndexes", "listIndexes", "listCollections", "createCollection", "dropCollection", "renameCollection", "collStats", "dbStats"] |
+| indexes | string | 否 | 索引操作的索引规范 JSON |  |
+| indexOptions | string | 否 | JSON 字符串格式的索引选项 (例如，unique、sparse、expireAfterSeconds) |  |
+| pipeline | string | 否 | JSON 字符串格式的聚合管道阶段。aggregate 操作需要。 |  |
+| newName | string | 否 | renameCollection 操作的新名称 |  |
+| bulkOperations | string | 否 | JSON 字符串格式的批量写入操作数组。bulkWrite 操作需要。 |  |
 
 **输出规范**:
 ```typescript
@@ -90,9 +98,11 @@
 **请求示例**:
 ```json
 {
-  "where": "{\\"age\\": {\\"$gt\\": 18}}",
-  "dbName": "users",
-  "collectionName": "profiles"
+  "dbName": "your_db",
+  "collectionName": "your_collection",
+  "queryType": "find",
+  "where": "{\\"status\\": \\"active\\"}",
+  "options": "{\\"limit\\": 10}"
 }
 ```
 
@@ -102,13 +112,13 @@
 ---
 
 ### redis_tool
-**描述**: 与 Redis 数据存储交互。
+**描述**: 执行任何 Redis 命令，完全支持所有 Redis 操作，包括字符串、哈希、列表、集合、排序集合、流等。
 
 **输入规范**:
 | 参数 | 类型 | 必填 | 描述 |
 |---|---|---|---|
-| command | string | 是 | 要执行的 Redis 命令。 |
-| args | string | 否 | JSON 字符串格式的 Redis 命令的参数。 |
+| command | string | 是 | 要执行的 Redis 命令 (例如, 'GET', 'SET', 'HGETALL', 'LPUSH', 'ZADD' 等)。 |
+| args | string | 否 | Redis 命令的参数，以 JSON 字符串格式提供。 例如，对于 SET: '[\"key\", \"value\"]'，对于 HSET: '[\"hash\", \"field\", \"value\"]'。 |
 
 **输出规范**:
 ```typescript
@@ -121,8 +131,8 @@
 **请求示例**:
 ```json
 {
-  "command": "GET",
-  "args": "{\\"key\\": \\"mykey\\"}"
+    "command": "SET",
+    "args": "[\"mykey\", \"myvalue\"]"
 }
 ```
 

@@ -72,7 +72,10 @@ export default async (request: any) => {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(`Created note ${id}: ${title}`),
+                    text: JSON.stringify({
+                        message: `Created note ${id}: ${title}`,
+                        id: id
+                    }),
                 },
             ],
         };
