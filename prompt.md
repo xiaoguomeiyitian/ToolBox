@@ -65,18 +65,16 @@ Here are the detailed steps and precautions for adding a new tool:
    - Refer to the example: `test/tools/time_tool.test.ts`
    - Must include:
      - Parameter validation tests (verifying required parameter missing scenarios)
-     - Normal/abnormal function scenario coverage
      - External dependency Mock (such as file system operations)
    - Execution method:
      - Full test: `npm run test`
-     - Single test: `npm run test:single TestFileName`
-     - Coverage check: `npm run coverage` (must be ≥80%, used to validate logic branch coverage; add test cases if not met)
+     - Single test: `npm run test -- test/tools/TestFileName`
 
 6.  **Run Test Cases:**
-    *   Use the `npm run test` command to run all test cases, or use the `npm run test:single <test case name>` command to run a single test case.
+    *   Use the `npm run test` command to run all test cases, or use the `npm run test -- test/tools/TestFileName` command to run a single test case.
 
 7.  **Verify Test Results:**
-    *   Check the test results to ensure that all test cases pass. If tests fail or coverage is insufficient, use this feedback to identify flaws in the tool implementation and iterate improvements.
+    *   Check the test results to ensure that all test cases pass. If tests fail, use this feedback to identify flaws in the tool implementation and iterate improvements.
 
 8.  **Configure Dynamic Loading:**
     *   Files in the `tools` directory are dynamically loaded. Ensure your tool file follows this structure:
