@@ -2,7 +2,7 @@
 
 Here are the detailed steps and precautions for adding a new tool:
 
-1.  **Create a Tool File:** Create a new TypeScript file (e.g., `my_tool.ts`) in the `src/tools/` directory.
+1. **Create a Tool File:** Create a new TypeScript file (e.g., `my_tool.ts`) in the `src/tools/` directory.
 
 2.  **Define the Parameter List (schema):**
     *   In this file, export a `schema` object to describe the tool's parameters.
@@ -37,8 +37,12 @@ Here are the detailed steps and precautions for adding a new tool:
           "caller_identifier"
         );
         ```
-        - First parameter: Request object containing the tool name and parameters
-        - Second parameter: Unique identifier of the caller for log tracing
+    *   **Precautions:**
+        - Only use `callToolHandler` proactively when a tool call chain needs to be formed.
+        - Regular tool execution logs are automatically recorded by the system; manual addition is not required.
+        - Error handling does not require, and should not call `callToolHandler` for logging.
+        - First parameter: Request object containing the tool name and parameters.
+        - Second parameter: Unique identifier of the caller for log tracing.
         - The called tool will record the call chain information:
           ```json
           {
@@ -52,21 +56,67 @@ Here are the detailed steps and precautions for adding a new tool:
           // Scheduled task call example
           `schedule_tool_${task.id}`
           ```
-        - Multi-level calls will automatically form a complete call chain, and the complete execution path can be traced through log fields
+        - Multi-level calls will automatically form a complete call chain, and the complete execution path can be traced through log fields.
 
-4.  **Dynamic Loading:**
-    *   Files in the `tools` directory are dynamically loaded, so after adding a new tool file, there is no need to modify the `src/index.ts` and `src/handler/ToolHandler.ts` files.
+4.  **Create Test File:**
+    *   Create a new TypeScript file (e.g., `my_tool.test.ts`) in the `test/tools/` directory.
 
-5.  **Compile Files:**
+5. **Write Test Cases:**
+   - Refer to the example: `test/tools/time_tool.test.ts`
+   - Must include:
+     - Parameter validation tests (verifying required parameter missing scenarios)
+     - Normal/abnormal function scenario coverage
+     - External dependency Mock (such as file system operations)
+   - Execution method:
+     - Full test: `npm run test`
+     - Single test: `npm run test:single TestFileName`
+     - Coverage check: `npm run coverage` (must be ≥80%, used to validate logic branch coverage; add test cases if not met)
+
+6.  **Run Test Cases:**
+    *   Use the `npm run test` command to run all test cases, or use the `npm run test:single <test case name>` command to run a single test case.
+
+7.  **Verify Test Results:**
+    *   Check the test results to ensure that all test cases pass. If tests fail or coverage is insufficient, use this feedback to identify flaws in the tool implementation and iterate improvements.
+
+8.  **Configure Dynamic Loading:**
+    *   Files in the `tools` directory are dynamically loaded. Ensure your tool file follows this structure:
+        ```typescript
+        import { ToolSchema } from '@modelcontextprotocol/sdk';
+        
+        export const schema: ToolSchema = {
+          name: 'your_tool_name',
+          description: 'Tool functionality description',
+          type: 'object',
+          properties: {
+            // Add parameter definitions
+            param1: {
+              type: 'string',
+              description: 'Parameter description',
+              enum: ['OPTION1', 'OPTION2'] // Example enum
+            }
+          },
+          required: ['param1'],
+          outputSchema: {
+            type: 'object',
+            properties: {
+              content: { /*...*/ },
+              isError: { /*...*/ }
+            }
+          }
+        };
+        ```
+    *   No need to modify `src/index.ts` or `src/handler/ToolHandler.ts`
+
+9.  **Compile Files:**
     *   After adding or modifying the code, you need to compile the files. You can use the `npm run build` command to compile the files.
 
-6.  **Test the Tool:**
-    *   After adding the tool, you can call the tool through the MCP client to test whether its function is normal.
-    *   You can use `listToolsHandler` to list all tools and confirm that the new tool has been successfully loaded.
-
-7.  **Restart the MCP Server:**
+10. **Restart the MCP Server:**
     *   After compiling the files, you need to restart the MCP server for the new tool to take effect.
     *   Please manually restart the MCP server.
+
+11. **Test the Tool:**
+    *   After compiling the files, you can call the tool through the MCP client to test whether its function is normal.
+    *   You can use `listToolsHandler` to list all tools and confirm that the new tool has been successfully loaded.
 
 ## Logging Specifications
 
@@ -76,9 +126,10 @@ Here are the detailed steps and precautions for adding a new tool:
 
 The system implements centralized logging through callToolHandler:
 
-1. **Execution Monitoring**
-- Automatically records execution time (cost in milliseconds)
-- Captures both success and error statuses
+1. **Automatic Logging**
+- All tool calls are automatically logged via `callToolHandler`, eliminating the need for manual logging code.
+- Logged information includes: execution time, parameters, duration, and status (success/error).
+- Error logs automatically capture error messages and stack traces.
 
 2. **Standardized Log Structure**
 | Field  | Source                  | Example                      |

@@ -5,7 +5,7 @@
       "label": "Build",
       "dependsOrder": "sequence",
       "dependsOn": [
-        "build_dev",
+        "build",
         "restart_debug"
       ],
       "group": {
@@ -14,12 +14,12 @@
       }
     },
     {
-      "label": "build_dev",
+      "label": "build",
       "type": "shell",
       "command": "npm",
       "args": [
         "run",
-        "build_dev"
+        "build"
       ],
       "problemMatcher": [],
       "presentation": {
