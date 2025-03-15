@@ -12,7 +12,7 @@ const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const isTest = process.env.NODE_ENV === 'test';
 
 // 目录
-const dataDir = isTest ? path.join(currentDir, '..', '..', 'test') : currentDir;
+const dataDir = isTest ? path.join(currentDir, '..', 'test') : currentDir;
 
 //log目录
 const logDirectory = path.join(dataDir, 'log');
