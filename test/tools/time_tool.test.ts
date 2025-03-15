@@ -2,8 +2,7 @@ import { schema as toolSchema, default as toolHandler } from '../../src/tools/ti
 import { describe, test, expect } from 'vitest';
 
 describe('time_tool 测试套件', () => {
-  test('参数验证', async () => {
-    // 测试必填参数缺失场景
+  test('基本测试', async () => {
     const result = await toolHandler({ params: { arguments: {} } });
     expect(result.content[0].text).toContain("Current time:");
   });

@@ -63,8 +63,8 @@ Here are the detailed steps and precautions for adding a new tool:
 
 5. **Write Test Cases:**
    - Refer to the example: `test/tools/time_tool.test.ts`
+   - All test cases do not need to do parameter validation tests
    - Must include:
-     - Parameter validation tests (verifying required parameter missing scenarios)
      - External dependency Mock (such as file system operations)
    - Execution method:
      - Full test: `npm run test`

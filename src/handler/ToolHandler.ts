@@ -8,7 +8,7 @@ const tools: any[] = [];
 const ToolHandler: { [key: string]: any } = {};
 
 export async function loadTools() {
-    const toolFiles = fs.readdirSync(toolsDir).filter(file => file.endsWith('.js'));
+    const toolFiles = fs.readdirSync(toolsDir).filter(file => file.endsWith('.js') || file.endsWith('.ts'));
     for (const file of toolFiles) {
         const toolPath = path.join(toolsDir, file);
         try {
