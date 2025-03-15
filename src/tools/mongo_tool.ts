@@ -322,7 +322,7 @@ export default async (request: any) => {
                     break;
 
                 case "distinct":
-                    if (!args.where || !args.field) {
+                    if (!args.field) {
                         throw new Error("Field name is required in 'field' for distinct operation");
                     }
                     const query = Object.values(where)[0] || {};
