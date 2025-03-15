@@ -72,14 +72,26 @@
 
 **日志文件路径：** `./log/ToolBox.log`
 
-关键日志字段说明（原始→优化后）：
-| 原始字段       | 优化字段        | 描述说明                    |
-|----------------|----------------|---------------------------|
-| timestamp      | ts             | 事件时间戳(ISO 8601格式)   |
-| params         | args           | 工具执行参数                |
-| status         | stat           | 执行状态(success/error)    |
-| duration       | cost           | 操作耗时(毫秒)             |
-| error          | err            | 错误信息(若有)             |
-| stack          | trace          | 错误堆栈(若有)             |
-| caller         | caller          | 调用链源头标识            |
-| tool           | tool          | 工具名称         |
+### 统一日志处理机制
+
+系统通过 callToolHandler 实现集中式日志记录：
+
+1. **执行监控**
+- 自动记录执行时间（cost 毫秒级）
+- 同时捕获成功和错误状态
+
+2. **标准化日志结构**
+| 字段    | 数据来源                | 示例值                      |
+|--------|-----------------------|---------------------------|
+| ts     | ISO 8601 时间戳        | "2025-03-15T02:29:40.123Z" |
+| tool   | 请求工具名称            | "docker_tool"             |
+| caller | 调用链标识符            | "schedule_tool_123"       |
+| args   | 执行参数                | { "image": "nginx" }      |
+| stat   | success/error          | "success"                 |
+| cost   | 执行耗时(毫秒)          | 158                       |
+| err    | 错误信息                | "Invalid image format"    |
+| trace  | 错误堆栈                | Error: Invalid image format... |
+
+3. **调用链追踪**
+- 调用方标识符遵循 `<父工具名>_<唯一后缀>` 格式
+- 多级调用自动形成可追溯执行路径

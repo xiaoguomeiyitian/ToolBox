@@ -72,14 +72,26 @@ Here are the detailed steps and precautions for adding a new tool:
 
 **Log file path:** `./log/ToolBox.log`
 
-Key log entry fields description (original → optimized):
-| Original Field | Optimized Field | Description                          |
-|----------------|-----------------|--------------------------------------|
-| timestamp      | ts              | Event timestamp (ISO 8601 format)    |
-| params         | args            | Tool execution parameters            |
-| status         | stat            | Execution status (success/error)     |
-| duration       | cost            | Operation duration in milliseconds   |
-| error          | err             | Error message (if any)               |
-| stack          | trace           | Error stack trace (if any)           |
-| caller         | caller          | Call chain source identifier         |
-| tool           | tool          | Tool name         |
+### Unified Log Processing Mechanism
+
+The system implements centralized logging through callToolHandler:
+
+1. **Execution Monitoring**
+- Automatically records execution time (cost in milliseconds)
+- Captures both success and error statuses
+
+2. **Standardized Log Structure**
+| Field  | Source                  | Example                      |
+|--------|-------------------------|------------------------------|
+| ts     | ISO 8601 timestamp      | "2025-03-15T02:29:40.123Z"   |
+| tool   | Request tool name       | "docker_tool"                |
+| caller | Call chain identifier   | "schedule_tool_123"          |
+| args   | Execution parameters     | { "image": "nginx" }         |
+| stat   | success/error           | "success"                    |
+| cost   | Execution duration (ms) | 158                          |
+| err    | Error message           | "Invalid image format"       |
+| trace  | Error stack trace        | Error: Invalid image format... |
+
+3. **Call Chain Tracking**
+- Caller identifiers follow `<parent_tool>_<unique_suffix>` format
+- Multi-level calls automatically form traceable execution paths
