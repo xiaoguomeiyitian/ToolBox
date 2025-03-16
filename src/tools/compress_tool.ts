@@ -116,7 +116,7 @@ export default async (request: any) => {
         return {
             content: [{
                 type: "text",
-                text: JSON.stringify({ 
+                text: JSON.stringify({
                     status: "success",
                     operation: `${action} completed`,
                     source: sourcePath,
@@ -138,3 +138,9 @@ export default async (request: any) => {
         };
     }
 };
+
+// Destroy function
+export async function destroy() {
+    // Release resources, stop timers, disconnect, etc.
+    console.log("Destroy compress_tool");
+}

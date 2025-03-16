@@ -133,3 +133,9 @@ export default async (request: any): Promise<{ content: any[]; isError?: boolean
     return { content: [{ type: 'text', text: `Query failed: ${error.message}` }], isError: true };
   }
 };
+
+// Destroy function
+export async function destroy() {
+  // Release resources, stop timers, disconnect, etc.
+  console.log("Destroy log_tool");
+}

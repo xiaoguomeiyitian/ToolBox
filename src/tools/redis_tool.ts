@@ -3,8 +3,14 @@ import { Redis } from 'ioredis';
 // 获取 Redis 连接 URL
 const REDIS_URI = process.env.REDIS_URI;
 if (!REDIS_URI) throw new Error("REDIS_URI environment variable is not set.");
-const redisClient: Redis = new Redis(REDIS_URI);
-
+const redisClient: Redis = new Redis(REDIS_URI, {
+    retryStrategy(times) {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+    },
+    maxRetriesPerRequest: 3,
+    enableOfflineQueue: false
+});
 /** Parameter list for the redis_tool */
 export const schema = {
     name: "redis_tool",
@@ -216,4 +222,18 @@ function getCommandSyntaxHint(command: string): string {
     };
 
     return syntaxMap[command] || `Please consult the Redis documentation for the syntax of ${command}.`;
+}
+
+// Destroy function
+export async function destroy() {
+    // Release resources, stop timers, disconnect, etc.
+    console.log("Destroy redis_tool");
+    if (redisClient) {
+        try {
+            await redisClient.disconnect();
+            await redisClient.quit();
+        } catch (error) {
+            console.error("Failed to close Redis client:", error);
+        }
+    }
 }

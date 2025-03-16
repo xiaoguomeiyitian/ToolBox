@@ -22,6 +22,10 @@ Here are the detailed steps and precautions for adding a new tool:
     *   Also in this file, export a `default` function to implement the specific function of the tool.
     *   The `default` function must receive a `request` parameter, which contains request information, such as parameters.
     *   The `default` function must return a Promise, and the resolved value should be an object containing the `content` property. The `content` property is an array containing an object, which contains the `type` (content type, such as `"text"`) and `text` (content text) properties.
+    *   To avoid memory leaks during automatic tool reloading, it is recommended to add a destroy function.
+    *   **Destroy Function:**
+        *   In the tool file, export a `destroy` function to release memory, stop timers, disconnect, etc.
+        *   The system automatically calls this function before the tool is reloaded.
     *   **Precautions:**
         *   The `request.params.arguments` object contains the parameters passed by the client.
         *   Parameters should be validated to ensure that the type and value of the parameters meet expectations.
@@ -58,7 +62,6 @@ Here are the detailed steps and precautions for adding a new tool:
             *   The call chain identifier should follow the `<parent_tool>_<unique_suffix>` format, for example:
 
                 ```typescript
-                // Scheduled task call example
                 `schedule_tool_${task.id}`
                 ```
             *   Multi-level calls will automatically form a complete call chain, and the complete execution path can be tracked through the log fields.
@@ -66,16 +69,22 @@ Here are the detailed steps and precautions for adding a new tool:
 4.  **Tool Dynamic Loading:**
     *   Files in the `tools` directory are dynamically loaded. No need to modify `src/index.ts` or `src/handler/ToolHandler.ts`.
 
-5.  **Compile Files:**
-    *   After adding or modifying code, you need to compile the files. You can use the `npm run build` command to compile the files.
+5. **Auto Build & Reload:**
+    # Execute through MCP client
+    callToolHandler --tool buildReload_tool
+    This will automatically:
+    - Compile source code
+    - Reload all tools
+    - Verify tool registry
 
-6.  **Restart the MCP Server:**
-    *   After compiling the files, you need to restart the MCP server to make the new tool take effect.
-    *   Please manually restart the MCP server.
-
-7.  **Test the Tool:**
-    *   After compiling the files, you can call the tool through the MCP client to test whether its function is normal.
-    *   You can use `listToolsHandler` to list all tools and confirm that the new tool has been successfully loaded.
+6. **Testing Tools:**
+    After adding new tool code, directly call the MCP server's `buildReload_tool` to compile and load the new tool. If the execution is successful, you can immediately call the newly added MCP server tool for testing, thus achieving automated development and testing. If a test problem occurs, fix the problem, recompile, call the MCP server's `buildReload_tool` to compile and load, and then test again.
+    # Complete development cycle example:
+    # 1. After creating a new tool
+    callToolHandler --tool buildReload_tool
+    # 2. Immediately test the new tool
+    callToolHandler --tool your_new_tool --args '{"param1":"value1"}'
+    # 3. Fix and reload based on test results
 
 ## Logging Specifications
 
@@ -108,7 +117,7 @@ The system implements centralized log recording through callToolHandler:
 
 ## Error Handling Best Practices
 
-1.  **Use try-catch to Wrap Key Code**:
+**Use try-catch to Wrap Key Code**:
 
     ```typescript
     try {
@@ -122,8 +131,6 @@ The system implements centralized log recording through callToolHandler:
 **Tool Development Example**:
 
 ```typescript
-import { z } from 'zod';
-
 // Define parameter schema
 export const schema = {
   name: "hello_world",
@@ -154,13 +161,14 @@ export const schema = {
     }
   }
 };
+
 // Implement tool logic
 export default async function(request: any) {
   try {
     const { name, language = "en" } = request.params.arguments;
 
     // Parameter validation
-    if (!name || typeof name !== "string") {
+    if (typeof name !== "string" || name.trim() === "") {
       throw new Error("The name parameter must be a non-empty string");
     }
 
@@ -200,6 +208,12 @@ export default async function(request: any) {
       isError: true
     };
   }
+}
+
+// Destroy function
+export async function destroy() {
+  // Release resources, stop timers, disconnect, etc.
+  console.log("Destroy hello_world tool");
 }
 ```
 

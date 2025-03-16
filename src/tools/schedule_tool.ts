@@ -223,6 +223,25 @@ export const schema = {
     }
 };
 
+// Destroy function
+export async function destroy() {
+    console.log("Destroy schedule_tool");
+    scheduledTasks.forEach(task => {
+        if (task.timerId) {
+            try {
+                if (task.type === 'recurring') {
+                    clearInterval(task.timerId);
+                } else {
+                    clearTimeout(task.timerId);
+                }
+            } catch (error) {
+                console.error(`Failed to clear timer for task ${task.id}:`, error);
+            }
+        }
+    });
+    scheduledTasks = [];
+}
+
 export default async (request: any) => {
     const action = request.params.arguments?.action;
     const toolName = request.params.arguments?.toolName;

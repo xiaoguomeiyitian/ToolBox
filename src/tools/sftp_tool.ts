@@ -82,21 +82,21 @@ async function getSSHConnection(serverName: string): Promise<Client> {
     // 创建新连接
     return new Promise((resolve, reject) => {
         const conn = new Client();
-        
+
         conn.on('ready', () => {
             sshConnections[serverName] = conn;
             resolve(conn);
         });
-        
+
         conn.on('error', (err) => {
             delete sshConnections[serverName];
             reject(new Error(`SSH connection error: ${err.message}`));
         });
-        
+
         conn.on('end', () => {
             delete sshConnections[serverName];
         });
-        
+
         conn.connect({
             host: host,
             port: parseInt(port),
@@ -220,22 +220,22 @@ export default async (request: any) => {
     try {
         // 解析请求参数
         const { serverName, action, localPath, remotePath } = request.params.arguments;
-        
+
         // 验证参数
         if (!serverName || !action || !localPath || !remotePath) {
             throw new Error("Missing required parameters: serverName, action, localPath, remotePath");
         }
-        
+
         if (action !== 'upload' && action !== 'download') {
             throw new Error('Invalid action. Must be "upload" or "download".');
         }
 
         // 获取SSH连接
         const conn = await getSSHConnection(serverName);
-        
+
         // 获取SFTP会话
         const sftp = await getSFTPSession(conn);
-        
+
         let result;
         try {
             // 执行文件操作
@@ -278,3 +278,23 @@ export default async (request: any) => {
         };
     }
 };
+
+// Destroy function
+export async function destroy() {
+    console.log("Destroy sftp_tool");
+    // 关闭所有SSH连接
+    for (const serverName in sshConnections) {
+        if (sshConnections[serverName]) {
+            try {
+                if (sshConnections[serverName].end) {
+                    sshConnections[serverName].end();
+                }
+            } catch (error) {
+                console.error(`Failed to close SSH connection for ${serverName}: ${error}`);
+            } finally {
+                delete sshConnections[serverName];
+            }
+        }
+    }
+    sshConnections = {};
+}

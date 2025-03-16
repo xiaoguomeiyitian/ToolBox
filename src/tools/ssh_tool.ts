@@ -46,6 +46,26 @@ export const schema = {
     }
 };
 
+// Destroy function
+export async function destroy() {
+    console.log("Destroy ssh_tool");
+    // 关闭所有SSH连接
+    for (const serverName in sshConnections) {
+        if (sshConnections[serverName]) {
+            try {
+                if (sshConnections[serverName].end) {
+                    sshConnections[serverName].end();
+                }
+            } catch (error) {
+                console.error(`Failed to close SSH connection for ${serverName}: ${error}`);
+            } finally {
+                delete sshConnections[serverName];
+            }
+        }
+    }
+    sshConnections = {};
+}
+
 /**
  * 获取SSH连接
  * @param serverName 服务器名称

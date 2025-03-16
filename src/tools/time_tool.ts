@@ -129,3 +129,9 @@ export default async (request: any) => {
         };
     }
 };
+
+// Destroy function
+export async function destroy() {
+    // Release resources, stop timers, disconnect, etc.
+    console.log("Destroy time_tool");
+}

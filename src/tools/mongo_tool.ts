@@ -135,6 +135,19 @@ export const schema = {
         required: ["content"]
     }
 };
+
+// Destroy function
+export async function destroy() {
+    // Release resources, stop timers, disconnect, etc.
+    console.log("Destroy mongo_tool");
+    if (mongoClient) {
+        try {
+            await mongoClient.close();
+        } catch (error) {
+            console.error("Failed to close MongoDB client:", error);
+        }
+    }
+}
 const isValidQuery = (query: string): boolean => {
     // Enhanced validation to prevent injection attacks
     if (query.includes("$where") || query.includes("eval(") || query.includes("$function")) {
