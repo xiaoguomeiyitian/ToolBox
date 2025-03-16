@@ -23,7 +23,7 @@ graph LR
 [中文文档](README_ZH.md)
 
 ## 贡献
-[贡献指南 (English)](CONTRIBUTING_EN.md)
+[贡献指南 (English)](CONTRIBUTING.md)
 [贡献指南 (中文)](CONTRIBUTING_ZH.md)
 
 [工具规范](TOOL.md)
