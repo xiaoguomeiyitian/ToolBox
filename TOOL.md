@@ -270,3 +270,45 @@
 
 **Error Handling**:
 - Returns `isError: true` with error message in `content.text`
+
+---
+
+### buildReload_tool
+**Description**: Execute 'npm run build' and reload all tools
+
+**Input Schema**:
+```typescript
+{
+  name: "buildReload_tool",
+  description: "Execute 'npm run build' and reload all tools",
+  type: "object",
+  properties: {},
+  required: [],
+  outputSchema: {
+    type: "object",
+    properties: {
+      content: {
+        type: "array",
+        items: {
+          type: { type: "string" },
+          text: { type: "string" }
+        }
+      },
+      isError: { type: "boolean" }
+    }
+  }
+}
+```
+
+**Output Schema**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**Error Handling**:
+- Returns `isError: true` with error message in `content.text`
+
+---

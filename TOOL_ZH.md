@@ -270,3 +270,45 @@
 
 **错误处理**:
 - 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
+### buildReload_tool
+**描述**: 执行 'npm run build' 并重新加载所有工具
+
+**输入规范**:
+```typescript
+{
+  name: "buildReload_tool",
+  description: "Execute 'npm run build' and reload all tools",
+  type: "object",
+  properties: {},
+  required: [],
+  outputSchema: {
+    type: "object",
+    properties: {
+      content: {
+        type: "array",
+        items: {
+          type: { type: "string" },
+          text: { type: "string" }
+        }
+      },
+      isError: { type: "boolean" }
+    }
+  }
+}
+```
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---

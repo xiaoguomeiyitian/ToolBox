@@ -1,15 +1,30 @@
 # ToolBox MCP Server 
-[![GitHub Repository](https://img.shields.io/badge/Repo-ToolBox_MCP_Server-blue?logo=github)](https://github.com/xiaoguomeiyitian/ToolBox)
+[![GitHub Release](https://img.shields.io/github/v/release/xiaoguomeiyitian/ToolBox)](https://github.com/xiaoguomeiyitian/ToolBox/releases)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A versatile Model Context Protocol (MCP) server providing a collection of tools for various tasks.
+An AI-powered automation tool development platform, providing:
 
-This TypeScript-based server acts as a toolbox, offering functionalities ranging from note creation to data manipulation and system interaction. It showcases core MCP concepts by:
+🧩 Modular Architecture - Tool hot-reloading via the `src/tools` directory
+🤖 AI Assistance - AI engine for natural language to tool template conversion
+🚀 Enterprise-Grade Capabilities - Integration of production environment services such as MongoDB/Redis/SSH
+🔄 Real-time Updates - Zero-downtime deployment via `buildReload_tool`
 
-- Exposing tools that perform specific actions.
-- Dynamically generating resources based on tool execution.
-- Providing prompts for data summarization and other tasks.
+```mermaid
+graph LR
+    A[Developer] -->|Create| B(Tool Template)
+    B --> C{AI Verification}
+    C -->|Pass| D[Automatic Loading]
+    C -->|Fail| E[Human Review]
+    D --> F[API Exposure]
+    F --> G[Client Invocation]
+    style C fill:#4CAF50,stroke:#333
+```
 
 [中文文档](README_ZH.md)
+
+## Contributing
+[Contributing Guidelines (English)](CONTRIBUTING_EN.md)
+[Contributing Guidelines (中文)](CONTRIBUTING_ZH.md)
 
 [Tool Specifications](TOOL.md)
 
@@ -30,15 +45,29 @@ Resources are generated dynamically as a result of tool execution. For example, 
 ## Development Guide
 
 ### Adding New Tools
+```mermaid
+graph TD
+    A[Create Tool Template] --> B{AI Automatic Verification}
+    B -->|Schema Validation| C[Generate Test Cases]
+    B -->|Risk Exists| D[Human Review]
+    C --> E[Unit Testing]
+    D -->|Approve| E
+    E --> F[Security Scanning]
+    F --> G[Build Integration]
+    G --> H[Version Release]
+    style A fill:#f9f,stroke:#333
+    style H fill:#4CAF50,stroke:#333
+```
+
+**Detailed Development Process**
+1. Template Creation: Create a new tool file in the `src/tools/` directory
+2. AI Verification: Automatically check the parameter Schema compliance
+3. Test Generation: Generate test cases based on the function description
+4. Security Review: Static code analysis and dependency checking
+5. Continuous Integration: Automated deployment via GitHub Actions
+
 View the complete development guide: [prompt.md](prompt.md)
-
-Key steps summary:
-1. Create a tool file (my_tool.ts)
-2. Define the parameter schema (schema object)
-3. Implement the tool logic (default function)
-4. Compile and test the tool
-
-[Detailed steps](prompt.md) include best practices for parameter validation, error handling, etc.
+Refer to existing implementations: [Tool Examples](src/tools/)
 
 ## Development
 
@@ -93,7 +122,7 @@ To integrate with the Claude Desktop application, add the following server confi
 
 ## Core Values
 
-🚀 **Enterprise-Grade Automation**  
+🚀 **Enterprise-Grade Automation**
 Leveraging package.json configuration, providing:
 - Global CLI tool installation (`tbx` command)
 - Workflow scheduling engine (node-cron integration)
@@ -104,6 +133,20 @@ Leveraging package.json configuration, providing:
 - Strongly-typed TypeScript implementation
 - Real-time debugging support (--inspect flag)
 - VSCode debugging configuration template
+- Hot-reloading mechanism:
+  ```mermaid
+  graph LR
+    A[Code Modification] --> B[buildReload_tool]
+    B --> C[Automatic Compilation]
+    C --> D[Security Verification]
+    D --> E[Tool Reloading]
+    style B fill:#4CAF50,stroke:#333
+  ```
+  Implemented by calling `buildReload_tool`:
+  - Zero-downtime updates
+  - Automatic dependency tree parsing
+  - Version compatibility check
+  - Sandbox environment testing
 
 ## Debugging
 
