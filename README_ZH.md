@@ -20,13 +20,13 @@ graph LR
     style C fill:#4CAF50,stroke:#333
 ```
 
-[中文文档](README_ZH.md)
+[English Document](README.md)
 
 ## 贡献
 [贡献指南 (English)](CONTRIBUTING.md)
 [贡献指南 (中文)](CONTRIBUTING_ZH.md)
 
-[工具规范](TOOL.md)
+[工具规范](TOOL_ZH.md)
 
 ## 功能
 
