@@ -68,8 +68,8 @@ Collaborate with AI using the following commands:
 ## Community Guidelines
 
 - Communication Channel: GitHub Discussions
-- Code of Conduct: Adhere to the [Contributor Covenant](CODE_OF_CONDUCT.md)
-- Tool Attribution: Developer information will be recorded in the [Hall of Fame](HALL_OF_FAME.md)
+- Code of Conduct: Adhere to the [Contributor Covenant](CODE_OF_CONDUCT.md) and [CODE_OF_CONDUCT_ZH.md](CODE_OF_CONDUCT_ZH.md)
+- Tool Attribution: All tools are attributed to xiaoguomeiyitian in the [Hall of Fame](HALL_OF_FAME.md)
 
 ## Complete Development Example
 Reference: [Tool Development Specifications](prompt.md) and [Existing Tool Implementations](src/tools/)

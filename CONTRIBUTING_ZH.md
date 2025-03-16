@@ -68,8 +68,8 @@ export async function destroy() {
 ## 社区守则
 
 - 沟通渠道：GitHub Discussions
-- 行为准则：遵守[贡献者公约](CODE_OF_CONDUCT.md)
-- 工具署名：开发者信息将记录在[荣誉墙](HALL_OF_FAME.md)
+- 行为准则：遵守[贡献者公约](CODE_OF_CONDUCT.md) 和 [中文贡献者公约](CODE_OF_CONDUCT_ZH.md)
+- 工具署名：所有工具的开发者信息都记录在[荣誉墙](HALL_OF_FAME.md)
 
 ## 完整开发示例
 参考：[工具开发规范](prompt.md) 和 [现有工具实现](src/tools/)
