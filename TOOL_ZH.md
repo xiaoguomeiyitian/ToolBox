@@ -386,6 +386,77 @@
 
 ---
 
+### calculator_tool
+**描述**: 一个计算器工具，支持各种类型的数学运算。
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
+|---|---|---|---|---|
+| calculation_type | string | 是 | 要执行的数学计算的类型。 | ["evaluate_expression", "calculate_function", "calculate_statistics", "perform_geometry", "perform_financial_math", "perform_logic_operations", "perform_number_theory", "perform_combinatorics", "calculate_probability", "perform_set_theory", "perform_complex_number"] |
+| expression | string | 否 | 要计算的数学表达式（当 calculation_type 为 'evaluate_expression' 时使用）。 | |
+| function_name | string | 否 | 要计算的函数的名称（当 calculation_type 为 'calculate_function' 时使用）。 | |
+| function_argument | number | 否 | 函数的参数值。 | |
+| statistics_operation | string | 否 | 要执行的统计计算的类型（当 calculation_type 为 'calculate_statistics' 时使用）。 | ["mean", "median", "mode", "standard_deviation", "variance", "correlation", "regression"] |
+| data_points | array | 否 | 统计计算的数据点数组。 | |
+| data_set_x | array | 否 | 双变量统计的数据集 X（仅在需要时）。 | |
+| data_set_y | array | 否 | 双变量统计的数据集 Y（仅在需要时）。 | |
+| geometry_operation | string | 否 | 要执行的几何计算的类型（当 calculation_type 为 'perform_geometry' 时使用）。 | ["area_circle", "area_rectangle", "volume_cube"] |
+| radius | number | 否 | 圆的半径。 | |
+| length | number | 否 | 长度。 | |
+| width | number | 否 | 宽度。 | |
+| height | number | 否 | 高度。 | |
+| side | number | 否 | 立方体的边长。 | |
+| financial_math_operation | string | 否 | 要执行的金融数学计算的类型（当 calculation_type 为 'perform_financial_math' 时使用）。 | ["simple_interest", "compound_interest", "present_value", "future_value"] |
+| principal | number | 否 | 本金。 | |
+| rate | number | 否 | 利率（百分比）。 | |
+| time | number | 否 | 时间（年）。 | |
+| n_compounding_periods | integer | 否 | 复合周期数。 | |
+| logic_operation | string | 否 | 要执行的逻辑运算的类型（当 calculation_type 为 'perform_logic_operations' 时使用）。 | ["AND", "OR", "NOT", "XOR"] |
+| operand_a | boolean | 否 | 第一个操作数。 | |
+| operand_b | boolean | 否 | 第二个操作数。 | |
+| number_theory_operation | string | 否 | 要执行的数论运算的类型（当 calculation_type 为 'perform_number_theory' 时使用）。 | ["gcd", "lcm", "prime_factorization", "is_prime", "modular_exponentiation"] |
+| number_a | integer | 否 | 数论运算的第一个数字。 | |
+| number_b | integer | 否 | 数论运算的第二个数字（如果需要）。 | |
+| number_theory_modulus | integer | 否 | 模幂运算的模数。 | |
+| combinatorics_operation | string | 否 | 要执行的组合数学运算的类型（当 calculation_type 为 'perform_combinatorics' 时使用）。 | ["permutation", "combination", "factorial", "binomial_coefficient"] |
+| n_value | integer | 否 | 组合数学运算的 n 值。 | |
+| r_value | integer | 否 | 组合数学运算的 r 值（如果需要）。 | |
+| probability_operation | string | 否 | 要执行的概率计算的类型（当 calculation_type 为 'calculate_probability' 时使用）。 | ["probability_event", "conditional_probability", "bayes_theorem"] |
+| probability_a | number | 否 | 事件 A 的概率（介于 0 和 1 之间）。 | |
+| probability_b | number | 否 | 事件 B 的概率（介于 0 和 1 之间）。 | |
+| probability_a_given_b | number | 否 | A 给定 B 的条件概率（介于 0 和 1 之间）。 | |
+| probability_b_given_a | number | 否 | B 给定 A 的条件概率（介于 0 和 1 之间）。 | |
+| set_theory_operation | string | 否 | 要执行的集合论运算的类型（当 calculation_type 为 'perform_set_theory' 时使用）。 | ["union", "intersection", "difference", "symmetric_difference", "is_subset"] |
+| set_a | array | 否 | 集合论运算的第一个集合。 | |
+| set_b | array | 否 | 集合论运算的第二个集合。 | |
+| complex_number_operation | string | 否 | 要执行的复数运算的类型（当 calculation_type 为 'perform_complex_number' 时使用）。 | ["add", "subtract", "multiply", "divide", "modulus", "argument", "conjugate"] |
+| complex_a_real | number | 否 | 第一个复数的实部。 | |
+| complex_a_imaginary | number | 否 | 第一个复数的虚部。 | |
+| complex_b_real | number | 否 | 第二个复数的实部（如果需要）。 | |
+| complex_b_imaginary | number | 否 | 第二个复数的虚部（如果需要）。 | |
+| precision_level | number | 否 | 计算精度等级 (32, 64, 128) | [32, 64, 128] |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "calculation_type": "evaluate_expression",
+  "expression": "2 + 2"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
 ### buildReload_tool
 **描述**: 执行 'npm run build' 并重新加载所有工具
 

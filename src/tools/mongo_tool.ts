@@ -102,6 +102,17 @@ export const schema = {
         bulkOperations: {
             type: "string",
             description: "Array of bulk write operations in JSON string format. Required for bulkWrite operation."
+        },
+        explain: {
+            type: "boolean",
+            description: "When set to true, returns the execution plan information for the query instead of the results. Only applicable for find, findOne, and aggregate operations.",
+            default: false
+        },
+        explainVerbosity: {
+            type: "string",
+            enum: ["queryPlanner", "executionStats", "allPlansExecution"],
+            description: "The verbosity mode for explain output. 'queryPlanner' provides basic info, 'executionStats' includes execution statistics, 'allPlansExecution' shows all evaluated plans.",
+            default: "queryPlanner"
         }
     },
     required: ["dbName"],
@@ -188,6 +199,8 @@ export default async (request: any) => {
         const collectionName = args.collectionName ? String(args.collectionName) : null;
         const queryType = String(args.queryType || "find");
         const operationType = args.operationType;
+        const explain = Boolean(args.explain || false);
+        const explainVerbosity = args.explainVerbosity || "queryPlanner";
 
         // Check for index operations permission
         if (process.env.MONGO_INDEX_OPS !== 'true' &&
@@ -311,11 +324,22 @@ export default async (request: any) => {
                     if (options.limit) cursor.limit(options.limit);
                     if (options.skip) cursor.skip(options.skip);
 
-                    results = await cursor.toArray();
+                    if (explain) {
+                        // Use explain() with the specified verbosity
+                        results = await cursor.explain(explainVerbosity);
+                    } else {
+                        results = await cursor.toArray();
+                    }
                     break;
 
                 case "findOne":
-                    results = await collection.findOne(where, options);
+                    if (explain) {
+                        // For findOne with explain, we need to use find() with limit(1) and explain
+                        const explainCursor = collection.find(where, options).limit(1);
+                        results = await explainCursor.explain(explainVerbosity);
+                    } else {
+                        results = await collection.findOne(where, options);
+                    }
                     break;
 
                 case "aggregate":
@@ -323,14 +347,35 @@ export default async (request: any) => {
                     if (!Array.isArray(pipeline)) {
                         throw new Error("Pipeline must be an array for aggregate operation");
                     }
-                    results = await collection.aggregate(pipeline, options).toArray();
+
+                    if (explain) {
+                        // Add explain stage or use the explain() method depending on MongoDB version
+                        const aggregateCursor = collection.aggregate(pipeline, options);
+                        results = await aggregateCursor.explain(explainVerbosity);
+                    } else {
+                        results = await collection.aggregate(pipeline, options).toArray();
+                    }
                     break;
 
                 case "count":
-                    results = await collection.countDocuments(where, options);
+                    if (explain) {
+                        // For count with explain, we need to use the aggregate framework
+                        const countPipeline = [
+                            { $match: where },
+                            { $count: "count" }
+                        ];
+                        const countCursor = collection.aggregate(countPipeline, options);
+                        results = await countCursor.explain(explainVerbosity);
+                    } else {
+                        results = await collection.countDocuments(where, options);
+                    }
                     break;
 
                 case "estimatedDocumentCount":
+                    // explain is not directly supported for estimatedDocumentCount
+                    if (explain) {
+                        throw new Error("explain is not supported for estimatedDocumentCount operation");
+                    }
                     results = await collection.estimatedDocumentCount(options);
                     break;
 
@@ -339,10 +384,24 @@ export default async (request: any) => {
                         throw new Error("Field name is required in 'field' for distinct operation");
                     }
                     const query = Object.values(where)[0] || {};
-                    results = await collection.distinct(args.field, query);
+
+                    if (explain) {
+                        // For distinct with explain, we need to use the aggregate framework
+                        const distinctPipeline = [
+                            { $match: query },
+                            { $group: { _id: `$${args.field}` } }
+                        ];
+                        const distinctCursor = collection.aggregate(distinctPipeline, options);
+                        results = await distinctCursor.explain(explainVerbosity);
+                    } else {
+                        results = await collection.distinct(args.field, query);
+                    }
                     break;
 
                 case "insertOne":
+                    if (explain) {
+                        throw new Error("explain is not supported for insertOne operation");
+                    }
                     if (!args.data) {
                         throw new Error("Data is required for insertOne operation");
                     }
@@ -351,6 +410,9 @@ export default async (request: any) => {
                     break;
 
                 case "insertMany":
+                    if (explain) {
+                        throw new Error("explain is not supported for insertMany operation");
+                    }
                     if (!args.data) {
                         throw new Error("Data is required for insertMany operation");
                     }
@@ -362,6 +424,9 @@ export default async (request: any) => {
                     break;
 
                 case "updateOne":
+                    if (explain) {
+                        throw new Error("explain is not supported for updateOne operation");
+                    }
                     if (!args.updateOperators) {
                         throw new Error("Update operators are required for updateOne operation");
                     }
@@ -370,6 +435,9 @@ export default async (request: any) => {
                     break;
 
                 case "updateMany":
+                    if (explain) {
+                        throw new Error("explain is not supported for updateMany operation");
+                    }
                     if (!args.updateOperators) {
                         throw new Error("Update operators are required for updateMany operation");
                     }
@@ -378,14 +446,23 @@ export default async (request: any) => {
                     break;
 
                 case "deleteOne":
+                    if (explain) {
+                        throw new Error("explain is not supported for deleteOne operation");
+                    }
                     results = await collection.deleteOne(where, options);
                     break;
 
                 case "deleteMany":
+                    if (explain) {
+                        throw new Error("explain is not supported for deleteMany operation");
+                    }
                     results = await collection.deleteMany(where, options);
                     break;
 
                 case "bulkWrite":
+                    if (explain) {
+                        throw new Error("explain is not supported for bulkWrite operation");
+                    }
                     if (!args.bulkOperations) {
                         throw new Error("Bulk operations are required for bulkWrite operation");
                     }
@@ -397,6 +474,9 @@ export default async (request: any) => {
                     break;
 
                 case "findOneAndUpdate":
+                    if (explain) {
+                        throw new Error("explain is not supported for findOneAndUpdate operation");
+                    }
                     if (!args.updateOperators) {
                         throw new Error("Update operators are required for findOneAndUpdate operation");
                     }
@@ -405,10 +485,16 @@ export default async (request: any) => {
                     break;
 
                 case "findOneAndDelete":
+                    if (explain) {
+                        throw new Error("explain is not supported for findOneAndDelete operation");
+                    }
                     results = await collection.findOneAndDelete(where, options);
                     break;
 
                 case "findOneAndReplace":
+                    if (explain) {
+                        throw new Error("explain is not supported for findOneAndReplace operation");
+                    }
                     if (!args.data) {
                         throw new Error("Replacement document is required for findOneAndReplace operation");
                     }

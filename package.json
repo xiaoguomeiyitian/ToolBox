@@ -31,6 +31,7 @@
     "build"
   ],
   "scripts": {
+    "pull": "git stash && git pull && git stash pop",
     "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
     "prepare": "npm run build",
     "watch": "tsc --watch",
@@ -40,8 +41,8 @@
   "devDependencies": {
     "@types/archiver": "^6.0.3",
     "@types/extract-zip": "^2.0.0",
-    "@types/sqlite3": "^3.1.11",
     "@types/node": "^22.13.10",
+    "@types/sqlite3": "^3.1.11",
     "@types/tar": "^6.1.13",
     "typescript": "^5.7.2",
     "vitest": "^3.0.8"
@@ -49,12 +50,16 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.7.0",
     "archiver": "^7.0.1",
+    "decimal.js": "^10.5.0",
     "dotenv": "^16.4.7",
     "extract-zip": "^2.0.1",
     "fast-csv": "^5.0.2",
     "fs-extra": "^11.3.0",
     "ioredis": "^5.6.0",
+    "mathjs": "^14.3.1",
     "mongodb": "^6.14.2",
+    "nerdamer": "^1.1.13",
+    "numeric": "^1.2.6",
     "sqlite3": "^5.1.7",
     "ssh2": "^1.16.0",
     "tar": "^7.4.3",

@@ -389,6 +389,77 @@
 
 ---
 
+### calculator_tool
+**Description**: A calculator_tool tool that supports various types of mathematical operations.
+
+**Input Schema**:
+| Parameter | Type | Required | Description | Enum Values |
+|---|---|---|---|---|
+| calculation_type | string | Yes | The type of mathematical calculation to perform. | ["evaluate_expression", "calculate_function", "calculate_statistics", "perform_geometry", "perform_financial_math", "perform_logic_operations", "perform_number_theory", "perform_combinatorics", "calculate_probability", "perform_set_theory", "perform_complex_number"] |
+| expression | string | No | The mathematical expression to calculate (used when calculation_type is 'evaluate_expression'). | |
+| function_name | string | No | The name of the function to calculate (used when calculation_type is 'calculate_function'). | |
+| function_argument | number | No | The argument value for the function. | |
+| statistics_operation | string | No | The type of statistical calculation to perform (used when calculation_type is 'calculate_statistics'). | ["mean", "median", "mode", "standard_deviation", "variance", "correlation", "regression"] |
+| data_points | array | No | The array of data points for statistical calculations. | |
+| data_set_x | array | No | The dataset X for bivariate statistics (only when needed). | |
+| data_set_y | array | No | The dataset Y for bivariate statistics (only when needed). | |
+| geometry_operation | string | No | The type of geometric calculation to perform (used when calculation_type is 'perform_geometry'). | ["area_circle", "area_rectangle", "volume_cube"] |
+| radius | number | No | The radius of the circle. | |
+| length | number | No | The length. | |
+| width | number | No | The width. | |
+| height | number | No | The height. | |
+| side | number | No | The side length of the cube. | |
+| financial_math_operation | string | No | The type of financial math calculation to perform (used when calculation_type is 'perform_financial_math'). | ["simple_interest", "compound_interest", "present_value", "future_value"] |
+| principal | number | No | The principal amount. | |
+| rate | number | No | The interest rate (percentage). | |
+| time | number | No | The time (in years). | |
+| n_compounding_periods | integer | No | The number of compounding periods. | |
+| logic_operation | string | No | The type of logic operation to perform (used when calculation_type is 'perform_logic_operations'). | ["AND", "OR", "NOT", "XOR"] |
+| operand_a | boolean | No | The first operand. | |
+| operand_b | boolean | No | The second operand. | |
+| number_theory_operation | string | No | The type of number theory operation to perform (used when calculation_type is 'perform_number_theory'). | ["gcd", "lcm", "prime_factorization", "is_prime", "modular_exponentiation"] |
+| number_a | integer | No | The first number for number theory operations. | |
+| number_b | integer | No | The second number for number theory operations (if needed). | |
+| number_theory_modulus | integer | No | The modulus for modular exponentiation. | |
+| combinatorics_operation | string | No | The type of combinatorics operation to perform (used when calculation_type is 'perform_combinatorics'). | ["permutation", "combination", "factorial", "binomial_coefficient"] |
+| n_value | integer | No | The n value for combinatorics operations. | |
+| r_value | integer | No | The r value for combinatorics operations (if needed). | |
+| probability_operation | string | No | The type of probability calculation to perform (used when calculation_type is 'calculate_probability'). | ["probability_event", "conditional_probability", "bayes_theorem"] |
+| probability_a | number | No | The probability of event A (between 0 and 1). | |
+| probability_b | number | No | The probability of event B (between 0 and 1). | |
+| probability_a_given_b | number | No | The conditional probability of A given B (between 0 and 1). | |
+| probability_b_given_a | number | No | The conditional probability of B given A (between 0 and 1). | |
+| set_theory_operation | string | No | The type of set theory operation to perform (used when calculation_type is 'perform_set_theory'). | ["union", "intersection", "difference", "symmetric_difference", "is_subset"] |
+| set_a | array | No | The first set for set theory operations. | |
+| set_b | array | No | The second set for set theory operations. | |
+| complex_number_operation | string | No | The type of complex number operation to perform (used when calculation_type is 'perform_complex_number'). | ["add", "subtract", "multiply", "divide", "modulus", "argument", "conjugate"] |
+| complex_a_real | number | No | The real part of the first complex number. | |
+| complex_a_imaginary | number | No | The imaginary part of the first complex number. | |
+| complex_b_real | number | No | The real part of the second complex number (if needed). | |
+| complex_b_imaginary | number | No | The imaginary part of the second complex number (if needed). | |
+| precision_level | number | No | Calculation precision level (32, 64, 128) | [32, 64, 128] |
+
+**Output Schema**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**Example Request**:
+```json
+{
+  "calculation_type": "evaluate_expression",
+  "expression": "2 + 2"
+}
+```
+
+**Error Handling**:
+- Returns `isError: true` with error message in `content.text`
+
+---
+
 ### sqlite_tool
 **Description**: A tool for performing SQLite database operations.
 
