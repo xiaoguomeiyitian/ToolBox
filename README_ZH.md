@@ -32,7 +32,7 @@ graph LR
 
 ### 工具
 
-查看完整的工具规范和详细文档：[TOOL.md](TOOL.md)
+查看完整的工具规范和详细文档：[TOOL_ZH.md](TOOL_ZH.md)
 
 ### 资源
 
