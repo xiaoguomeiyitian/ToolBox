@@ -123,6 +123,22 @@ export default async function(request: any) {
   let executionTime = 0;
   const outputPath = getOutputPath(request.params.arguments.outputFile);
 
+  // Check for restricted tools
+  const restrictedTools = ["buildReload_tool", "workflow_tool"];
+  for (const step of steps) {
+    if (restrictedTools.includes(step.tool)) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Workflow cannot include ${step.tool} tool.`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+
   try {
     for (const [index, step] of steps.entries()) {
       const stepResult = await executeStep(step, index);
