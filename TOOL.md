@@ -388,3 +388,40 @@
 - Returns `isError: true` with error message in `content.text`
 
 ---
+
+### sqlite_tool
+**Description**: A tool for performing SQLite database operations.
+
+**Input Schema**:
+| Parameter | Type | Required | Description | Enum Values |
+|---|---|---|---|---|
+| action | string | Yes | The type of operation to perform. | ["query", "transaction", "backup", "optimize", "index", "drop_index", "list_indexes", "table_info", "foreign_key_check", "integrity_check"] |
+| dbName | string | Yes | The name of the database file (without the .db extension). | |
+| query | string | No | The SQL query to execute. | |
+| params | array | No | The parameters for the SQL query. | |
+| backupName | string | No | The name of the backup file (without the .db extension). | |
+| pagination | object | No | Pagination configuration for queries. | |
+| tableName | string | No | The name of the table to operate on. | |
+| indexName | string | No | The name of the index to operate on. | |
+
+**Output Schema**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**Example Request**:
+```json
+{
+  "action": "query",
+  "dbName": "test",
+  "query": "SELECT * FROM users"
+}
+```
+
+**Error Handling**:
+- Returns `isError: true` with error message in `content.text`
+
+---

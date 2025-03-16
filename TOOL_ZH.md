@@ -111,6 +111,43 @@
 
 ---
 
+### sqlite_tool
+**描述**: SQLite数据库操作工具
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
+|---|---|---|---|---|
+| action | string | 是 | 操作类型 | ["query", "transaction", "backup", "optimize", "index", "drop_index", "list_indexes", "table_info", "foreign_key_check", "integrity_check"] |
+| dbName | string | 是 | 数据库名称 | |
+| query | string | 否 | 待执行的SQL语句 | |
+| params | array | 否 | 查询参数 | |
+| backupName | string | 否 | 备份名称 | |
+| pagination | object | 否 | 分页配置 | |
+| tableName | string | 否 | 需要操作的表名称 | |
+| indexName | string | 否 | 需要操作的索引名称 | |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "action": "query",
+  "dbName": "test",
+  "query": "SELECT * FROM users"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
 ### workflow_tool
 **描述**: 跨工具工作流编排引擎，支持串行/并行执行多个工具并管理事务
 
