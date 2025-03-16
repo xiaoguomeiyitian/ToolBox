@@ -21,7 +21,7 @@
 3.  **实现工具逻辑（default 函数）：**
     *   同样在此文件中，导出一个 `default` 函数来实现工具的特定功能。
     *   `default` 函数必须接收一个 `request` 参数，其中包含请求信息，例如参数。
-    *   `default` 函数必须返回一个 Promise，并且 resolved 的值应该是一个包含 `content` 属性的对象。`content` 属性是一个包含对象的数组，该对象包含 `type`（内容类型，例如 `"text"`）和 `text`（内容文本）属性。
+    *   `default` 函数必须返回一个 Promise，并且 resolved 的值应该是一个包含 `content` 属性的对象。`content` 属性是一个包含对象的数组，该对象包含 `type`（内容类型，例如 `"text"`）和 `text`（内容文本）属性。`text` 属性应该是一个使用 `JSON.stringify(results, null, 2)` 格式化的 JSON 字符串。
     *   为了避免自动工具重新加载期间的内存泄漏，添加一个 destroy 函数。
     *   **Destroy 函数：**
         *   在工具文件中，导出一个 `destroy` 函数来释放内存、停止计时器、断开连接等。

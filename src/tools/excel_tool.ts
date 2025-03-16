@@ -103,7 +103,7 @@ async function readXLSX(params: ReadParams) {
       content: [
         {
           type: "text",
-          text: `Error reading XLSX file: ${error instanceof Error ? error.message : String(error)}`,
+          text: JSON.stringify(`Error reading XLSX file: ${error instanceof Error ? error.message : String(error)}`, null, 2),
         },
       ],
       isError: true,
@@ -122,7 +122,7 @@ async function writeXLSX(params: WriteParams) {
       content: [
         {
           type: "text",
-          text: `XLSX file written successfully to ${params.filePath}`,
+          text: JSON.stringify(`XLSX file written successfully to ${params.filePath}`, null, 2),
         },
       ],
     };
@@ -132,7 +132,7 @@ async function writeXLSX(params: WriteParams) {
       content: [
         {
           type: "text",
-          text: `Error writing XLSX file: ${error instanceof Error ? error.message : String(error)}`,
+          text: JSON.stringify(`Error writing XLSX file: ${error instanceof Error ? error.message : String(error)}`, null, 2),
         },
       ],
       isError: true,
@@ -162,7 +162,7 @@ async function readCSV(params: ReadParams) {
           content: [
             {
               type: "text",
-              text: `Error reading CSV file: ${error instanceof Error ? error.message : String(error)}`,
+              text: JSON.stringify(`Error reading CSV file: ${error instanceof Error ? error.message : String(error)}`, null, 2),
             },
           ],
           isError: true,
@@ -192,7 +192,7 @@ async function writeCSV(params: WriteParams) {
           content: [
             {
               type: "text",
-              text: `Error writing CSV file: ${error instanceof Error ? error.message : String(error)}`,
+              text: JSON.stringify(`Error writing CSV file: ${error instanceof Error ? error.message : String(error)}`, null, 2),
             },
           ],
           isError: true,
@@ -256,7 +256,7 @@ export default async function (request: any) {
       content: [
         {
           type: "text",
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+          text: JSON.stringify(`Error: ${error instanceof Error ? error.message : String(error)}`, null, 2),
         },
       ],
       isError: true

@@ -317,7 +317,7 @@ export default async (request: any) => {
                 content: [
                     {
                         type: "text",
-                        text: messages.taskCreated(newTask.id),
+                        text: JSON.stringify(messages.taskCreated(newTask.id), null, 2),
                     },
                 ],
             };
@@ -330,7 +330,7 @@ export default async (request: any) => {
                 content: [
                     {
                         type: "text",
-                        text: messages.taskCanceled(id),
+                        text: JSON.stringify(messages.taskCanceled(id), null, 2),
                     },
                 ],
             };
@@ -359,7 +359,7 @@ export default async (request: any) => {
                 content: [
                     {
                         type: "text",
-                        text: messages.allOnceTasksCleared,
+                        text: JSON.stringify(messages.allOnceTasksCleared, null, 2),
                     },
                 ],
             };
@@ -375,7 +375,7 @@ export default async (request: any) => {
                 content: [
                     {
                         type: "text",
-                        text: messages.allRecurringCleared,
+                        text: JSON.stringify(messages.allRecurringCleared, null, 2),
                     },
                 ],
             };

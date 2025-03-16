@@ -130,7 +130,7 @@ export default async (request: any): Promise<{ content: any[]; isError?: boolean
 
     return { content: [{ type: 'text', text: JSON.stringify(paginatedLogs, null, 2) }] };
   } catch (error: any) {
-    return { content: [{ type: 'text', text: `Query failed: ${error.message}` }], isError: true };
+    return { content: [{ type: 'text', text: JSON.stringify(`Query failed: ${error.message}`, null, 2) }], isError: true };
   }
 };
 

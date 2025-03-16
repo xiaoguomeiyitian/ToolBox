@@ -84,7 +84,7 @@ export default async (request: any) => {
             content: [
                 {
                     type: "text",
-                    text: `Error creating note: ${error.message}`,
+                    text: JSON.stringify(`Error creating note: ${error.message}`, null, 2),
                 },
             ],
             isError: true

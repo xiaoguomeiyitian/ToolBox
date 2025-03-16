@@ -106,9 +106,9 @@ export default async function(request: any) {
       return new Promise((resolve, reject) => {
         db.all(sql, params, (err, rows) => {
           if (err) {
-            reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+            reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
           } else {
-            const result = rows ? JSON.stringify(rows) : 'Success';
+            const result = rows ? JSON.stringify(rows, null, 2) : JSON.stringify('Success', null, 2);
             resolve({ content: [{ type: "text", text: result }], isError: false });
           }
         });
@@ -131,14 +131,14 @@ export default async function(request: any) {
             db.run(query, params, (err) => {
               if (err) {
                 db.run("ROLLBACK");
-                reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+                reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
               } else {
                 db.run("COMMIT", (err) => {
                   if (err) {
                     db.run("ROLLBACK");
-                    reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+                    reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
                   } else {
-                    resolve({ content: [{ type: "text", text: `Transaction completed successfully in database ${dbName}` }], isError: false });
+                    resolve({ content: [{ type: "text", text: JSON.stringify(`Transaction completed successfully in database ${dbName}`, null, 2) }], isError: false });
                   }
                 });
               }
@@ -154,9 +154,9 @@ export default async function(request: any) {
           const backupPath = path.join(sqlitePath, `${backupName}.db`);
           fs.copyFile(dbPath, backupPath, (err) => {
             if (err) {
-              reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
             } else {
-              resolve({ content: [{ type: "text", text: `Database ${dbName} backed up to ${backupName}.db` }], isError: false });
+              resolve({ content: [{ type: "text", text: JSON.stringify(`Database ${dbName} backed up to ${backupName}.db`, null, 2) }], isError: false });
             }
           });
         });
@@ -164,9 +164,9 @@ export default async function(request: any) {
         return new Promise((resolve, reject) => {
           db.run("VACUUM", (err) => {
             if (err) {
-              reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
             } else {
-              resolve({ content: [{ type: "text", text: `Database ${dbName} optimized` }], isError: false });
+              resolve({ content: [{ type: "text", text: JSON.stringify(`Database ${dbName} optimized`, null, 2) }], isError: false });
             }
           });
         });
@@ -177,9 +177,9 @@ export default async function(request: any) {
         return new Promise((resolve, reject) => {
           db.run(query, (err) => {
             if (err) {
-              reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
             } else {
-              resolve({ content: [{ type: "text", text: `Index created successfully for database ${dbName}` }], isError: false });
+              resolve({ content: [{ type: "text", text: JSON.stringify(`Index created successfully for database ${dbName}`, null, 2) }], isError: false });
             }
           });
         });
@@ -190,9 +190,9 @@ export default async function(request: any) {
         return new Promise((resolve, reject) => {
           db.run(`DROP INDEX IF EXISTS ${indexName}`, (err) => {
             if (err) {
-              reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
             } else {
-              resolve({ content: [{ type: "text", text: `Index ${indexName} dropped successfully from database ${dbName}` }], isError: false });
+              resolve({ content: [{ type: "text", text: JSON.stringify(`Index ${indexName} dropped successfully from database ${dbName}`, null, 2) }], isError: false });
             }
           });
         });
@@ -203,10 +203,10 @@ export default async function(request: any) {
         return new Promise((resolve, reject) => {
           db.all(`PRAGMA index_list(${tableName})`, (err, rows) => {
             if (err) {
-              reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
             } else {
               const formattedRows = rows.map(row => ({ name: row.name, table: tableName, unique: row.unique }));
-              const result = JSON.stringify(formattedRows);
+              const result = JSON.stringify(formattedRows, null, 2);
               resolve({ content: [{ type: "text", text: result }], isError: false });
             }
           });
@@ -218,9 +218,9 @@ export default async function(request: any) {
         return new Promise((resolve, reject) => {
           db.all(`PRAGMA table_info(${tableName})`, (err, rows) => {
             if (err) {
-              reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
             } else {
-              resolve({ content: [{ type: "text", text: JSON.stringify(rows) }], isError: false });
+              resolve({ content: [{ type: "text", text: JSON.stringify(rows, null, 2) }], isError: false });
             }
           });
         });
@@ -228,9 +228,9 @@ export default async function(request: any) {
         return new Promise((resolve, reject) => {
           db.all(`PRAGMA foreign_key_check`, (err, rows) => {
             if (err) {
-              reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
             } else {
-              resolve({ content: [{ type: "text", text: JSON.stringify(rows) }], isError: false });
+              resolve({ content: [{ type: "text", text: JSON.stringify(rows, null, 2) }], isError: false });
             }
           });
         });
@@ -238,9 +238,9 @@ export default async function(request: any) {
         return new Promise((resolve, reject) => {
           db.all(`PRAGMA integrity_check`, (err, rows) => {
             if (err) {
-              reject({ content: [{ type: "text", text: `Error: ${err.message}` }], isError: true });
+              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
             } else {
-              resolve({ content: [{ type: "text", text: `Integrity check passed for database ${dbName}` }], isError: false });
+              resolve({ content: [{ type: "text", text: JSON.stringify(`Integrity check passed for database ${dbName}`, null, 2) }], isError: false });
             }
           });
         });
@@ -248,6 +248,6 @@ export default async function(request: any) {
         throw new Error(`不支持的操作类型: ${action}`);
     }
   } catch (error) {
-    return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }], isError: true };
+    return { content: [{ type: "text", text: JSON.stringify(`Error: ${error instanceof Error ? error.message : String(error)}`, null, 2) }], isError: true };
   }
 }

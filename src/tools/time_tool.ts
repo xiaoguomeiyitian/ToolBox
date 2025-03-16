@@ -113,7 +113,7 @@ export default async (request: any) => {
             content: [
                 {
                     type: "text",
-                    text: `Current time: ${formattedTime}`,
+                    text: JSON.stringify(`Current time: ${formattedTime}`, null, 2),
                 },
             ],
         };
@@ -122,7 +122,7 @@ export default async (request: any) => {
             content: [
                 {
                     type: "text",
-                    text: `Error getting time: ${error.message}`,
+                    text: JSON.stringify(`Error getting time: ${error.message}`, null, 2),
                 },
             ],
             isError: true

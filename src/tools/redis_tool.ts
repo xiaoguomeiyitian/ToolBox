@@ -94,7 +94,7 @@ export default async (request: any) => {
                 content: [
                     {
                         type: "text",
-                        text: JSON.stringify(formattedResults),
+                        text: JSON.stringify(formattedResults, null, 2),
                     },
                 ],
             };
@@ -112,7 +112,7 @@ export default async (request: any) => {
                 content: [
                     {
                         type: "text",
-                        text: JSON.stringify(errorResponse),
+                        text: JSON.stringify(errorResponse, null, 2),
                     },
                 ],
                 isError: true,
@@ -138,7 +138,7 @@ export default async (request: any) => {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(errorResponse),
+                    text: JSON.stringify(errorResponse, null, 2),
                 },
             ],
             isError: true,

@@ -161,7 +161,7 @@ export default async function(request: any) {
             workflowStatus: workflowStatus,
             executionTime: executionTime,
             steps: stepDetails
-          })
+          }, null, 2)
         }
       ]
     };
@@ -174,7 +174,7 @@ export default async function(request: any) {
       content: [
         {
           type: "text",
-          text: `Workflow failed: ${error instanceof Error ? error.message : String(error)}`,
+          text: JSON.stringify(`Workflow failed: ${error instanceof Error ? error.message : String(error)}`, null, 2),
           workflowStatus: workflowStatus,
           executionTime: executionTime,
           steps: stepDetails

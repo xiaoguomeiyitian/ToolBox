@@ -259,7 +259,7 @@ export default async (request: any) => {
                         action: action,
                         localPath: localPath,
                         remotePath: remotePath
-                    })
+                    }, null, 2)
                 }
             ]
         };
@@ -271,7 +271,7 @@ export default async (request: any) => {
                     type: "text",
                     text: JSON.stringify({
                         error: error instanceof Error ? error.message : String(error)
-                    })
+                    }, null, 2)
                 }
             ],
             isError: true

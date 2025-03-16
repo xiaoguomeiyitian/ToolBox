@@ -884,7 +884,7 @@ export default async function (request: any) {
       content: [
         {
           type: "text",
-          text: String(result),
+          text: JSON.stringify(result, null, 2),
         },
       ],
     };
@@ -893,7 +893,7 @@ export default async function (request: any) {
       content: [
         {
           type: "text",
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+          text: JSON.stringify(`Error: ${error instanceof Error ? error.message : String(error)}`, null, 2),
         },
       ],
       isError: true,

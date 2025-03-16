@@ -21,7 +21,7 @@ Here are the detailed steps and precautions for adding a new tool:
 3.  **Implement Tool Logic (default Function):**
     *   Also in this file, export a `default` function to implement the specific function of the tool.
     *   The `default` function must receive a `request` parameter, which contains request information, such as parameters.
-    *   The `default` function must return a Promise, and the resolved value should be an object containing the `content` property. The `content` property is an array containing an object, which contains the `type` (content type, such as `"text"`) and `text` (content text) properties.
+    *   The `default` function must return a Promise, and the resolved value should be an object containing the `content` property. The `content` property is an array containing an object, which contains the `type` (content type, such as `"text"`) and `text` (content text) properties. The `text` property should be a JSON string formatted with `JSON.stringify(results, null, 2)`.
     *   To avoid memory leaks during automatic tool reloading, it is recommended to add a destroy function.
     *   **Destroy Function:**
         *   In the tool file, export a `destroy` function to release memory, stop timers, disconnect, etc.
