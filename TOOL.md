@@ -34,6 +34,48 @@
 
 ---
 
+### workflow_tool
+**Description**: Cross-tool workflow orchestration engine, supports serial/parallel execution of multiple tools and manages transactions
+
+**Input Schema**:
+| Parameter | Type | Required | Description | Enum Values |
+|---|---|---|---|---|
+| version | string | No | Workflow definition format version (example: '1.0.1') | |
+| steps | array | Yes | List of workflow steps (see example below) | |
+| tool | string | No | Tool name (example: 'sftp_tool') | |
+| args | object | No | Tool parameters (example: {action:'upload', localPath:'/tmp'}) | |
+| retry | number | No | Number of retries (example: 3 means retry up to 3 times) | |
+| timeout | string | No | Timeout (example: 5000 means 5 seconds timeout) | |
+| parallel | boolean | No | Parallel execution (example: true means execute in parallel with subsequent steps) | |
+| compensation | object | No | Compensation configuration example: {tool:'sftp_tool', args:{action:'delete'}} | |
+| outputFile | string | No | Path to the output file (optional, supports absolute or relative paths, defaults to the log directory) | |
+
+**Output Schema**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**Example Request**:
+```json
+{
+  "steps": [
+    {
+      "tool": "time_tool",
+      "args": {}
+    }
+  ],
+  "outputFile": "workflow_report.json"
+}
+```
+
+**Error Handling**:
+- Returns `isError: true` with error message in `content.text`
+
+---
+
 ### create_note
 **Description**: Create and store text notes  
 

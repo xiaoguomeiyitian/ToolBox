@@ -9,7 +9,9 @@ const redisClient: Redis = new Redis(REDIS_URI, {
         return delay;
     },
     maxRetriesPerRequest: 3,
-    enableOfflineQueue: false
+    enableOfflineQueue: true, // 改为true允许离线队列
+    enableReadyCheck: true,   // 添加就绪检查
+    connectTimeout: 5000      // 添加连接超时
 });
 /** Parameter list for the redis_tool */
 export const schema = {
@@ -226,14 +228,13 @@ function getCommandSyntaxHint(command: string): string {
 
 // Destroy function
 export async function destroy() {
-    // Release resources, stop timers, disconnect, etc.
     console.log("Destroy redis_tool");
     if (redisClient) {
         try {
-            await redisClient.disconnect();
-            await redisClient.quit();
+            // 直接物理断开连接
+            redisClient.disconnect();
         } catch (error) {
-            console.error("Failed to close Redis client:", error);
+            console.error("Force disconnect error:", error.message);
         }
     }
 }

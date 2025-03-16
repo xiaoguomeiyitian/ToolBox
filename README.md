@@ -38,6 +38,15 @@ View the complete tool specifications and detailed documentation: [TOOL.md](TOOL
 
 Resources are generated dynamically as a result of tool execution. For example, the `create_note` tool creates a note resource that can be accessed via its URI.
 
+### Workflow Tool
+
+The `workflow_tool` is a powerful tool for orchestrating complex workflows by chaining together multiple tools. It supports:
+
+- **Serial and Parallel Execution:** Execute tools in a sequential or parallel manner.
+- **Transaction Management:** Manage transactions with compensation mechanisms for error handling.
+- **Detailed Reporting:** Generate detailed reports on workflow execution, including the status, execution time, and results of each step.
+- **Customizable Output:** Specify an output file to save the workflow execution report.
+
 ### Prompts
 
 - `summarize_notes`: Generates summaries of the notes created using the `create_note` tool.

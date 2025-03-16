@@ -111,6 +111,48 @@
 
 ---
 
+### workflow_tool
+**描述**: 跨工具工作流编排引擎，支持串行/并行执行多个工具并管理事务
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
+|---|---|---|---|---|
+| version | string | 否 | 工作流定义格式版本（示例：'1.0.1'） | |
+| steps | array | 是 | 工作流步骤列表（示例见下方） | |
+| tool | string | 否 | 工具名称（示例：'sftp_tool'） | |
+| args | object | 否 | 工具参数（示例：{action:'upload', localPath:'/tmp'}) | |
+| retry | number | 否 | 重试次数（示例：3 表示最多重试3次） | |
+| timeout | string | 否 | 超时时间（示例：5000 表示5秒超时） | |
+| parallel | boolean | 否 | 并行执行（示例：true 表示与后续步骤并行） | |
+| compensation | object | 否 | 补偿配置示例：{tool:'sftp_tool', args:{action:'delete'}} | |
+| outputFile | string | 否 | 结果输出文件路径（可选，支持绝对路径或相对路径，默认生成在日志目录） | |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "steps": [
+    {
+      "tool": "time_tool",
+      "args": {}
+    }
+  ],
+  "outputFile": "workflow_report.json"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
 ### redis_tool
 **描述**: 执行任何 Redis 命令，完全支持所有 Redis 操作，包括字符串、哈希、列表、集合、排序集合、流等。
 

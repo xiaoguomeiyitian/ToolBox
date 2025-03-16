@@ -15,7 +15,7 @@ const isTest = process.env.NODE_ENV === 'test';
 const dataDir = isTest ? path.join(currentDir, '..', 'test') : currentDir;
 
 //log目录
-const logDirectory = path.join(dataDir, 'log');
+export const logDirectory = path.join(dataDir, 'log');
 if (!fs.existsSync(logDirectory)) fs.mkdirSync(logDirectory, { recursive: true });
 export const logFile = path.join(logDirectory, 'ToolBox.log');
 if (!fs.existsSync(logFile)) fs.writeFileSync(logFile, '', 'utf8');
