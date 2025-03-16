@@ -315,6 +315,40 @@
 
 ---
 
+### excel_tool
+**Description**: A tool to read and write Excel and CSV files
+
+**Input Schema**:
+| Parameter | Type | Required | Description | Enum Values |
+|---|---|---|---|---|
+| action | string | Yes | Action to perform: read or write | ["read", "write"] |
+| filePath | string | Yes | Absolute path to the file | |
+| format | string | Yes | File format | ["xlsx", "xls", "csv"] |
+| data | array | No | Data to write to the file (required for write action) | |
+| options | object | No | Additional options | |
+
+**Output Schema**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**Example Request**:
+```json
+{
+  "action": "read",
+  "filePath": "/path/to/file.xlsx",
+  "format": "xlsx"
+}
+```
+
+**Error Handling**:
+- Returns `isError: true` with error message in `content.text`
+
+---
+
 ### buildReload_tool
 **Description**: Execute 'npm run build' and reload all tools
 

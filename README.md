@@ -134,7 +134,7 @@ To integrate with the Claude Desktop application, add the following server confi
 🚀 **Enterprise-Grade Automation**
 Leveraging package.json configuration, providing:
 - Global CLI tool installation (`tbx` command)
-- Workflow scheduling engine (node-cron integration)
+- Workflow scheduling engine
 - Multi-platform support (Windows/macOS)
 - Hybrid cloud deployment capabilities (MongoDB/Redis/SSH)
 

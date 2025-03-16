@@ -315,6 +315,40 @@
 
 ---
 
+### excel_tool
+**描述**: 读写 Excel 和 CSV 文件的工具
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
+|---|---|---|---|---|
+| action | string | 是 | 执行的动作：读或写 | ["read", "write"] |
+| filePath | string | 是 | 文件的绝对路径 | |
+| format | string | 是 | 文件格式 | ["xlsx", "xls", "csv"] |
+| data | array | 否 | 要写入文件的数据（写操作时必填） | |
+| options | object | 否 | 附加选项 | |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "action": "read",
+  "filePath": "/path/to/file.xlsx",
+  "format": "xlsx"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
 ### buildReload_tool
 **描述**: 执行 'npm run build' 并重新加载所有工具
 

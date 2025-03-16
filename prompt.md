@@ -71,7 +71,7 @@ Here are the detailed steps and precautions for adding a new tool:
 
 5. **Auto Build & Reload:**
     # Execute through MCP client
-    callToolHandler --tool buildReload_tool
+    call MCP Tool buildReload_tool
     This will automatically:
     - Compile source code
     - Reload all tools
@@ -81,9 +81,9 @@ Here are the detailed steps and precautions for adding a new tool:
     After adding new tool code, directly call the MCP server's `buildReload_tool` to compile and load the new tool. If the execution is successful, you can immediately call the newly added MCP server tool for testing, thus achieving automated development and testing. If a test problem occurs, fix the problem, recompile, call the MCP server's `buildReload_tool` to compile and load, and then test again.
     # Complete development cycle example:
     # 1. After creating a new tool
-    callToolHandler --tool buildReload_tool
+    call MCP Tool buildReload_tool
     # 2. Immediately test the new tool
-    callToolHandler --tool your_new_tool --args '{"param1":"value1"}'
+    call MCP Tool your_new_tool --args '{"param1":"value1"}'
     # 3. Fix and reload based on test results
 
 ## Logging Specifications

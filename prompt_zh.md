@@ -70,8 +70,7 @@
     *   `tools` 目录中的文件是动态加载的。无需修改 `src/index.ts` 或 `src/handler/ToolHandler.ts`。
 
 5. **自动构建和重新加载：**
-    # 通过 MCP 客户端执行
-    callToolHandler --tool buildReload_tool
+    # 通过 MCP 客户端执行 buildReload_tool
     这会自动执行：
     - 编译源代码
     - 重新加载所有工具
@@ -81,9 +80,9 @@
     添加新工具代码后，直接调用 MCP 服务器的 `buildReload_tool` 来编译和加载新工具。如果执行结果为成功，您可以立即调用新添加的 MCP 服务器工具进行测试，从而实现自动化开发和测试。如果出现测试问题，请修复问题，重新调用 MCP 服务器的 `buildReload_tool` 来编译和加载，然后再次测试。
     # 完整的开发周期示例：
     # 1. 创建新工具后
-    callToolHandler --tool buildReload_tool
-    # 2. 立即测试新工具
-    callToolHandler --tool your_new_tool --args '{"param1":"value1"}'
+    调用 MCP工具 buildReload_tool
+    # 2. 直接测试新工具
+    直接调用 MCP工具 your_new_tool --args '{"param1":"value1"}'
     # 3. 根据测试结果修复并重新加载
 
 ## 日志规范

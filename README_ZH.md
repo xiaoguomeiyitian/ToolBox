@@ -134,7 +134,7 @@ npm run watch
 🚀 **企业级自动化**
 利用 package.json 配置，提供：
 - 全局 CLI 工具安装 (`tbx` 命令)
-- 工作流调度引擎 (node-cron 集成)
+- 工作流调度引擎
 - 多平台支持 (Windows/macOS)
 - 混合云部署能力 (MongoDB/Redis/SSH)
 
