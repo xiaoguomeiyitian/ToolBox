@@ -34,6 +34,44 @@
 
 ---
 
+### fileSystem_tool
+**Description**: A cross-platform file system management tool that allows you to perform various operations on files and directories, such as reading, writing, copying, moving, deleting, listing, and managing permissions. For example, you can use it to read the content of a file, create a new directory, or change the permissions of a file.
+
+**Input Schema**:
+| Parameter | Type | Required | Description | Enum Values |
+|---|---|---|---|---|
+| operation | string | Yes | The type of file system operation to perform. | `["read", "write", "copy", "move", "delete", "list", "listDetails", "chmod", "chown", "getSize"]` |
+| sourcePath | string | Yes | The absolute path to the source file or directory. For example, `"/home/coder/ToolBox/test/file.txt"` to specify a file in the test directory. |  |
+| targetPath | string | No | The absolute path to the target file or directory. Required for `copy` and `move` operations. For example, `"/home/coder/ToolBox/test/new_file.txt"` to specify a new location for a copied or moved file. |  |
+| recursive | boolean | No | Whether to perform the operation recursively on directories. If set to `true`, the operation will be applied to all subdirectories and files within the source directory. | `true`, `false` |
+| overwrite | boolean | No | Whether to overwrite existing files during `copy` or `move` operations. If set to `true`, existing files will be overwritten. If set to `false`, the operation will fail if the target file already exists. | `true`, `false` |
+| showHidden | boolean | No | Whether to include hidden files and directories in `list` and `listDetails` operations. If set to `true`, hidden files and directories (those starting with a `.`) will be included in the results. | `true`, `false` |
+| fileMode | string | No | The file mode (permissions) to set for the `chmod` operation, in octal format (e.g., `755`). This parameter is only used for the `chmod` operation and specifies the permissions to be set on the file or directory. |  |
+| uid | number | No | The user ID to set for the `chown` operation. This parameter is only used for the `chown` operation and specifies the user ID to be set as the owner of the file or directory. |  |
+| gid | number | No | The group ID to set for the `chown` operation. This parameter is only used for the `chown` operation and specifies the group ID to be set as the group owner of the file or directory. |  |
+| platformOverride | string | No | Override the platform to simulate different OS behavior. This is useful for testing cross-platform compatibility. If set to `'auto'`, the tool will use the current operating system. | `["auto", "linux", "win32", "darwin"]` |
+
+**Output Schema**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**Example Request**:
+```json
+{
+  "operation": "list",
+  "sourcePath": "/home/coder/ToolBox/test"
+}
+```
+
+**Error Handling**:
+- Returns `isError: true` with error message in `content.text`
+
+---
+
 ### workflow_tool
 **Description**: Cross-tool workflow orchestration engine, supports serial/parallel execution of multiple tools and manages transactions
 

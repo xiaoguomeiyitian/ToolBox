@@ -34,6 +34,44 @@
 
 ---
 
+### fileSystem_tool
+**描述**: 跨平台文件系统管理工具
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
+|---|---|---|---|---|
+| operation | string | 是 | 操作类型 | ["read", "write", "copy", "move", "delete", "list", "listDetails", "chmod", "chown", "getSize"] |
+| sourcePath | string | 是 | 源文件/目录路径 | |
+| targetPath | string | 否 | 目标路径（仅copy/move需要） | |
+| recursive | boolean | 否 | 是否递归操作目录 | |
+| overwrite | boolean | 否 | 是否覆盖已有文件 | |
+| showHidden | boolean | 否 | 是否显示隐藏文件 | |
+| fileMode | string | 否 | 八进制权限码（如 755） | |
+| uid | number | 否 | 用户ID | |
+| gid | number | 否 | 组ID | |
+| platformOverride | string | 否 | 平台覆盖 | ["auto", "linux", "win32", "darwin"] |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**请求示例**:
+```json
+{
+  "operation": "list",
+  "sourcePath": "/home/coder/ToolBox/test"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
 ### create_note
 **描述**: 创建并存储文本笔记  
 

@@ -349,7 +349,7 @@ export default async (request: any) => {
                     }
 
                     if (explain) {
-                        // Add explain stage or use the explain() method depending on MongoDB version
+                        // Use explain option for aggregate
                         const aggregateCursor = collection.aggregate(pipeline, options);
                         results = await aggregateCursor.explain(explainVerbosity);
                     } else {
