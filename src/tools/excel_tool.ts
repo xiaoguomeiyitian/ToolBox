@@ -78,11 +78,6 @@ interface WriteParams {
   };
 }
 
-// Define error codes
-const FILE_NOT_FOUND = "FILE_NOT_FOUND";
-const FORMAT_MISMATCH = "FORMAT_MISMATCH";
-const PARSE_ERROR = "PARSE_ERROR";
-
 async function readXLSX(params: ReadParams) {
   try {
     const workbook = XLSX.read(fs.readFileSync(params.filePath), { type: 'buffer' });

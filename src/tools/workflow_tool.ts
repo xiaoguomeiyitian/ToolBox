@@ -1,4 +1,3 @@
-// src/tools/workflow_tool.ts
 import { callToolHandler } from '../handler/ToolHandler.js';
 import { logDirectory } from '../config.js';
 import { promises as fs } from 'fs';
