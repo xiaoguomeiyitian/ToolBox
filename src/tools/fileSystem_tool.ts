@@ -4,73 +4,58 @@ import path from 'path';
 // Define parameter schema
 export const schema = {
   name: "fileSystem_tool",
-  description: "A cross-platform file system management tool that allows you to perform various operations on files and directories.",
+  description: "Cross-platform file system management tool.",
   type: "object",
   properties: {
     operation: {
       type: "string",
       enum: ["read", "write", "copy", "move", "delete", "list", "listDetails", "chmod", "chown", "getSize"],
-      description: "The type of file system operation to perform. For example, 'read' to read a file, 'write' to write to a file, 'list' to list files in a directory, etc."
+      description: "File system operation (read, write, copy, etc.)"
     },
     sourcePath: {
       type: "string",
-      description: "The absolute path to the source file or directory. For example, '/home/coder/ToolBox/test/file.txt'."
+      description: "Absolute path to source"
     },
     targetPath: {
       type: "string",
-      description: "The absolute path to the target file or directory. Required for 'copy' and 'move' operations. For example, '/home/coder/ToolBox/test/new_file.txt'."
+      description: "Absolute path to target (required for copy/move)"
     },
     recursive: {
       type: "boolean",
       default: false,
-      description: "Whether to perform the operation recursively on directories. If true, the operation will be applied to all subdirectories and files within the source directory."
+      description: "Recursively apply operation to directories"
     },
     overwrite: {
       type: "boolean",
       default: false,
-      description: "Whether to overwrite existing files during 'copy' or 'move' operations. If true, existing files will be overwritten. If false, the operation will fail if the target file already exists."
+      description: "Overwrite existing files during copy/move"
     },
     showHidden: {
       type: "boolean",
       default: false,
-      description: "Whether to include hidden files and directories in 'list' and 'listDetails' operations. If true, hidden files and directories (those starting with a '.') will be included in the results."
+      description: "Include hidden files/directories in list/listDetails"
     },
     fileMode: {
       type: "string",
       pattern: "^[0-7]{3,4}$",
-      description: "The file mode (permissions) to set for 'chmod' operation, in octal format (e.g., 755). This parameter is only used for the 'chmod' operation and specifies the permissions to be set on the file or directory."
+      description: "File mode (permissions) in octal format (e.g., 755)"
     },
     uid: {
       type: "number",
-      description: "The user ID to set for 'chown' operation. This parameter is only used for the 'chown' operation and specifies the user ID to be set as the owner of the file or directory."
+      description: "User ID for chown operation"
     },
     gid: {
       type: "number",
-      description: "The group ID to set for 'chown' operation. This parameter is only used for the 'chown' operation and specifies the group ID to be set as the group owner of the file or directory."
+      description: "Group ID for chown operation"
     },
     platformOverride: {
       type: "string",
       enum: ["auto", "linux", "win32", "darwin"],
       default: "auto",
-      description: "Override the platform to simulate different OS behavior. This is useful for testing cross-platform compatibility. If set to 'auto', the tool will use the current operating system."
+      description: "Override platform for OS behavior simulation"
     }
   },
-  required: ["operation", "sourcePath"],
-  outputSchema: {
-    type: "object",
-    properties: {
-      content: {
-        type: "array",
-        items: {
-          type: { type: "string" },
-          text: { type: "string" }
-        }
-      },
-      isError: {
-        type: "boolean"
-      }
-    }
-  }
+  required: ["operation", "sourcePath"]
 };
 
 // Implement tool logic

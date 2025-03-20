@@ -6,7 +6,7 @@ import * as path from 'path';
 // Define parameter schema
 export const schema = {
   name: "excel_tool",
-  description: "A tool to read and write Excel and CSV files",
+  description: "Read and write Excel/CSV files",
   type: "object",
   properties: {
     action: {
@@ -25,7 +25,7 @@ export const schema = {
     },
     data: {
       type: "array",
-      description: "Data to write to the file (required for write action)",
+      description: "Data to write (required for write action)",
       items: {
         type: "object",
         additionalProperties: true
@@ -41,25 +41,13 @@ export const schema = {
         },
         headerRow: {
           type: "boolean",
-          description: "Whether to include a header row in the output file"
+          description: "Include header row in output"
         }
       },
       additionalProperties: true
     }
   },
-  required: ["action", "filePath", "format"],
-  outputSchema: {
-    type: "object",
-    properties: {
-      content: {
-        type: "array",
-        items: {
-          type: { type: "string" },
-          text: { type: "string" }
-        }
-      }
-    }
-  }
+  required: ["action", "filePath", "format"]
 };
 
 interface ReadParams {

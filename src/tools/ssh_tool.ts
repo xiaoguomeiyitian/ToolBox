@@ -11,39 +11,14 @@ export const schema = {
     properties: {
         serverName: {
             type: "string",
-            description: "The name of the SSH server to connect to.",
+            description: "SSH server name",
         },
         command: {
             type: "string",
-            description: "The command to execute on the SSH server.",
+            description: "Command to execute",
         },
     },
-    required: ["serverName", "command"],
-    outputSchema: {
-        type: "object",
-        properties: {
-            content: {
-                type: "array",
-                items: {
-                    type: {
-                        type: "string",
-                        description: "The content type (e.g., 'text')."
-                    },
-                    text: {
-                        type: "string",
-                        description: "The query result in JSON string format."
-                    }
-                },
-                description: "An array containing the query result."
-            },
-            isError: {
-                type: "boolean",
-                description: "Indicates whether an error occurred during the query.",
-                default: false
-            }
-        },
-        required: ["content"]
-    }
+    required: ["serverName", "command"]
 };
 
 // Destroy function

@@ -6,73 +6,64 @@ import { sqlitePath } from '../config.js';
 // 工具参数schema
 export const schema = {
   name: "sqlite_tool",
-  description: "A tool for performing SQLite database operations.",
+  description: "Perform SQLite database operations",
   type: "object",
   properties: {
     action: {
       type: "string",
       enum: ["query", "transaction", "backup", "optimize", "index", "drop_index", "list_indexes", "table_info", "foreign_key_check", "integrity_check"],
-      description: "The type of operation to perform."
+      description: "Operation type"
     },
     dbName: {
       type: "string",
-      description: "The name of the database file (without the .db extension)."
+      description: "Database file name (without extension)"
     },
     query: {
       type: "string",
-      description: "The SQL query to execute."
+      description: "SQL query to execute"
     },
     params: {
       type: "array",
-      description: "The parameters for the SQL query."
+      description: "SQL query parameters"
     },
     backupName: {
       type: "string",
-      description: "The name of the backup file (without the .db extension)."
+      description: "Backup file name (without extension)"
     },
     pagination: {
       type: "object",
-      description: "Pagination configuration for queries.",
+      description: "Pagination settings",
       properties: {
         page: {
           type: "number",
           minimum: 1,
           default: 1,
-          description: "The page number."
+          description: "Page number"
         },
         pageSize: {
           type: "number",
           minimum: 1,
           maximum: 1000,
           default: 50,
-          description: "The number of items per page."
+          description: "Items per page"
         },
         countTotal: {
           type: "boolean",
           default: false,
-          description: "Whether to count the total number of items."
+          description: "Count total items"
         }
       }
     },
     tableName: {
       type: "string",
-      description: "The name of the table to operate on."
+      description: "Table name"
     },
     indexName: {
       type: "string",
-      description: "The name of the index to operate on."
+      description: "Index name"
     }
   },
-  required: ["action", "dbName"],
-  outputSchema: {
-    type: "object",
-    properties: {
-      success: { type: "boolean" },
-      dataType: { type: "string", enum: ["text", "table"] },
-      data: { type: "string" }
-    },
-    required: ["success", "dataType", "data"]
-  }
+  required: ["action", "dbName"]
 };
 
 // 连接池

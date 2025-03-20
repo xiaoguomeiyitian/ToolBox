@@ -6,48 +6,19 @@ export const schema = {
     properties: {
         format: {
             type: "string",
-            description: "The format of the time to return (iso, timestamp, local, custom). Defaults to iso.",
+            description: "Time format (iso, timestamp, local, custom)",
             enum: ["iso", "timestamp", "local", "custom"]
         },
         pattern: {
             type: "string",
-            description: "The custom format pattern to use when format is custom. Required when format is custom."
+            description: "Custom format pattern (required if format=custom)"
         },
         timezone: {
             type: "string",
-            description: "The timezone to use. Defaults to the system's timezone. Example: Asia/Shanghai"
+            description: "Timezone (e.g., Asia/Shanghai)"
         }
     },
-    required: [],
-    outputSchema: {
-        type: "object",
-        properties: {
-            content: {
-                type: "array",
-                items: {
-                    type: "object",
-                    properties: {
-                        type: {
-                            type: "string",
-                            description: "The content type (e.g., 'text')."
-                        },
-                        text: {
-                            type: "string",
-                            description: "The query result in JSON string format."
-                        }
-                    },
-                    required: ["type", "text"]
-                },
-                description: "An array containing the query result."
-            },
-            isError: {
-                type: "boolean",
-                description: "Indicates whether an error occurred during the query.",
-                default: false
-            }
-        },
-        required: ["content"]
-    },
+    required: []
 };
 
 enum TimeFormat {

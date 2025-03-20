@@ -9,7 +9,7 @@ export const schema = {
   properties: {
     pageSize: {
       type: 'number',
-      description: 'Number of logs per page (1-100)',
+      description: 'Logs per page (1-100)',
       minimum: 1,
       maximum: 100,
       default: 10
@@ -22,55 +22,31 @@ export const schema = {
     },
     toolName: {
       type: 'string',
-      description: 'Regular expression to match tool name',
+      description: 'Regex to match tool name',
     },
     status: {
       type: 'string',
-      description: 'Status of the log (success or error)',
+      description: 'Log status (success or error)',
       enum: ['success', 'error'],
     },
     minDuration: {
       type: 'number',
-      description: 'Minimum duration in milliseconds',
+      description: 'Minimum duration (ms)',
     },
     maxDuration: {
       type: 'number',
-      description: 'Maximum duration in milliseconds',
+      description: 'Maximum duration (ms)',
     },
     startTime: {
       type: 'string',
-      description: 'Start time in ISO8601 format',
+      description: 'Start time (ISO8601)',
     },
     endTime: {
       type: 'string',
-      description: 'End time in ISO8601 format',
+      description: 'End time (ISO8601)',
     },
   },
-  required: ['pageSize', 'page'],
-  outputSchema: {
-    type: 'object',
-    properties: {
-      content: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            ts: { type: 'string' },
-            args: { type: 'object' },
-            cost: { type: 'number' },
-            stat: { type: 'string' },
-            tool: { type: 'string' },
-          },
-          required: ['ts', 'args', 'cost', 'stat', 'tool'],
-        },
-      },
-      isError: {
-        type: 'boolean',
-        default: false,
-      },
-    },
-    required: ['content'],
-  },
+  required: ['pageSize', 'page']
 };
 
 interface LogEntry {

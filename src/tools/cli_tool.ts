@@ -8,18 +8,7 @@ const setTimeoutPromise = promisify(setTimeout);
 
 export const schema = {
   name: "cli_tool",
-  description: `A TypeScript-built CLI executor with compiled artifacts directly in build/ directory.
-Directory structure:
-- Source code: src/
-- Compiled output: build/ (flat structure)
-- Logs: build/log/cli_tool.log
-
-Execution context:
-• All paths are resolved relative to build/ directory
-• Logs always write to build/log/ subdirectory
-Example valid paths:
-- cwd: "" → build/
-- cwd: "config" → build/config/`,
+  description: "CLI executor with sync/async modes and timeout.",
   type: "object",
   properties: {
     command: { type: "string", description: "Single-line command content" },
@@ -42,23 +31,13 @@ Example valid paths:
     },
     cwd: {
       type: "string",
-      description: `Working directory resolution rules:
-• Absolute path: /absolute/path/here
-• Relative path: build/ + relativePath
-• Empty string: Uses build/ as root
-⚠️ Important: Does NOT reference src/ directory
-Example:
-- Command ran in build/ directory
-- "cwd": "config" → resolves to build/config/`
+      description: "Working directory (absolute or relative to build/)"
     },
     platform: {
       type: "string",
       enum: ["auto", "win32", "linux", "darwin"],
       default: "auto",
-      description: `Force execution context:
-• "win32": Uses Windows path semantics
-• "linux": Uses POSIX path semantics
-• "auto": Matches build directory's OS type`
+      description: "Force execution context (win32, linux)"
     },
     safe_mode: {
       type: "boolean",
@@ -66,20 +45,7 @@ Example:
       description: "Enable dangerous command filtering"
     }
   },
-  required: [],
-  outputSchema: {
-    type: "object",
-    properties: {
-      content: {
-        type: "array",
-        items: {
-          type: { type: "string" },
-          text: { type: "string" }
-        }
-      },
-      isError: { type: "boolean" }
-    }
-  }
+  required: []
 };
 
 const dangerousCommands = [

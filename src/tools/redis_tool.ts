@@ -16,48 +16,19 @@ const redisClient: Redis = new Redis(REDIS_URI, {
 /** Parameter list for the redis_tool */
 export const schema = {
     name: "redis_tool",
-    description: "Execute any Redis command, fully supporting all Redis operations, including strings, hashes, lists, sets, sorted sets, streams, etc.",
+    description: "Execute Redis commands (strings, hashes, lists, sets, etc.)",
     type: "object",
     properties: {
         command: {
             type: "string",
-            description: "The Redis command to execute (e.g., 'GET', 'SET', 'HGETALL', 'LPUSH', 'ZADD', etc.).",
+            description: "Redis command to execute (e.g., 'GET', 'SET')",
         },
         args: {
             type: "string",
-            description: "The arguments for the Redis command, provided in JSON string format. For example, for SET: '[\"key\", \"value\"]', for HSET: '[\"hash\", \"field\", \"value\"]'.",
+            description: "Arguments for the command (JSON string)",
         },
     },
-    required: ["command"],
-    outputSchema: {
-        type: "object",
-        properties: {
-            content: {
-                type: "array",
-                items: {
-                    type: "object",
-                    properties: {
-                        type: {
-                            type: "string",
-                            description: "Content type (e.g., 'text')."
-                        },
-                        text: {
-                            type: "string",
-                            description: "The query result returned in JSON string format."
-                        }
-                    },
-                    required: ["type", "text"]
-                },
-                description: "An array containing the query result."
-            },
-            isError: {
-                type: "boolean",
-                description: "Indicates whether an error occurred during the query.",
-                default: false
-            }
-        },
-        required: ["content"]
-    }
+    required: ["command"]
 };
 
 export default async (request: any) => {

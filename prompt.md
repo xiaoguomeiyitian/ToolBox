@@ -8,15 +8,13 @@ Here are the detailed steps and precautions for adding a new tool:
 
 2.  **Define the Parameter List (schema):**
     *   In this file, export a `schema` object to describe the tool's parameters.
-    *   The `schema` object must contain the following properties: `name` (tool name), `description` (tool description), `type` (must be `"object"`), `properties` (parameter definitions), `required` (list of required parameters), and `outputSchema` (output format definition).
+    *   The `schema` object must contain the following properties: `name` (tool name), `description` (tool description), `type` (must be `"object"`), `properties` (parameter definitions), `required` (list of required parameters).
     *   Each parameter definition in the `properties` object must include the `type` (parameter type, such as `"string"`, `"number"`, `"boolean"`) and `description` (parameter description) properties.
     *   If the parameter is an enumeration type, you can use the `enum` property to specify the enumeration values.
-    *   `outputSchema` is used to define the output format of the tool, including the `content` (content array) and `isError` (whether an error occurred) properties.
     *   **Precautions:**
         *   `name` must be unique and cannot be duplicated with other tools.
         *   `description` should be clear and concise, describing the function of the tool.
         *   The `required` array should contain all required parameters to avoid errors during tool execution.
-        *   `outputSchema` should be consistent with the return value of the `default` function to ensure the output format is correct.
 
 3.  **Implement Tool Logic (default Function):**
     *   Also in this file, export a `default` function to implement the specific function of the tool.
@@ -147,19 +145,7 @@ export const schema = {
       description: "Greeting language (en: English, zh: Chinese, fr: French)"
     }
   },
-  required: ["name"],
-  outputSchema: {
-    type: "object",
-    properties: {
-      content: {
-        type: "array",
-        items: {
-          type: { type: "string" },
-          text: { type: "string" }
-        }
-      }
-    }
-  }
+  required: ["name"]
 };
 
 // Implement tool logic

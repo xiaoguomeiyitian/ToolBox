@@ -159,28 +159,28 @@ scheduledTasks.forEach(task => scheduleTask(task));
 
 export const schema = {
     name: "schedule_tool",
-    description: "Manage scheduled tasks with create/cancel/list operations",
+    description: "Manage scheduled tasks (create/cancel/list)",
     type: "object",
     properties: {
         action: {
             type: "string",
             enum: ["create", "cancel", "list", "cancel_all_once", "cancel_all_recurring"],
-            description: "Action type (create/cancel/list tasks)"
+            description: "Action type (create/cancel/list)"
         },
         time: {
             type: "string",
-            description: "Absolute execution time in 'YYYY-MM-DD HH:mm:ss' format"
+            description: "Absolute execution time (YYYY-MM-DD HH:mm:ss)"
         },
         delaySeconds: {
             type: "number",
-            description: "Delay execution by N seconds (e.g. 300 for 5 minutes)"
+            description: "Delay execution by N seconds"
         },
         interval: {
             type: "string",
-            description: "Recurring interval pattern (e.g. 'every@5m' for 5 minutes, 'every@30s' for 30 seconds)"
+            description: "Recurring interval pattern (e.g. 'every@5m')"
         },
         toolName: {
-            description: "Name of the tool to execute (e.g. 'time_tool')"
+            description: "Tool to execute (e.g. 'time_tool')"
         },
         toolArgs: {
             type: "object",
@@ -188,39 +188,10 @@ export const schema = {
         },
         id: {
             type: "string",
-            description: "Task ID (required for cancellation)"
+            description: "Task ID (required for cancel)"
         }
     },
-    required: ["action"],
-    outputSchema: {
-        type: "object",
-        properties: {
-            content: {
-                type: "array",
-                items: {
-                    type: "object",
-                    properties: {
-                        type: {
-                            type: "string",
-                            description: "The content type (e.g., 'text')."
-                        },
-                        text: {
-                            type: "string",
-                            description: "The query result in JSON string format."
-                        }
-                    },
-                    required: ["type", "text"]
-                },
-                description: "An array containing the query result."
-            },
-            isError: {
-                type: "boolean",
-                description: "Indicates whether an error occurred during the query.",
-                default: false
-            }
-        },
-        required: ["content"]
-    }
+    required: ["action"]
 };
 
 // Destroy function

@@ -10,23 +10,10 @@ const PROJECT_ROOT = path.dirname(path.dirname(__dirname));  // 上溯两级目�
 
 export const schema = {
   name: "buildReload_tool",
-  description: "Execute 'npm run build' and reload all tools",
+  description: "Execute 'npm run build' and reload tools",
   type: "object",
   properties: {},
-  required: [],
-  outputSchema: {
-    type: "object",
-    properties: {
-      content: {
-        type: "array",
-        items: {
-          type: { type: "string" },
-          text: { type: "string" }
-        }
-      },
-      isError: { type: "boolean" }
-    }
-  }
+  required: []
 };
 
 export default async function (request: any) {

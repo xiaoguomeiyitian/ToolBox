@@ -8,15 +8,13 @@
 
 2.  **定义参数列表（schema）：**
     *   在此文件中，导出一个 `schema` 对象来描述工具的参数。
-    *   `schema` 对象必须包含以下属性：`name`（工具名称）、`description`（工具描述）、`type`（必须为 `"object"`）、`properties`（参数定义）、`required`（必需参数列表）和 `outputSchema`（输出格式定义）。
+    *   `schema` 对象必须包含以下属性：`name`（工具名称）、`description`（工具描述）、`type`（必须为 `"object"`）、`properties`（参数定义）、`required`（必需参数列表）。
     *   `properties` 对象中的每个参数定义必须包含 `type`（参数类型，例如 `"string"`、`"number"`、`"boolean"`）和 `description`（参数描述）属性。
     *   如果参数是枚举类型，可以使用 `enum` 属性来指定枚举值。
-    *   `outputSchema` 用于定义工具的输出格式，包括 `content`（内容数组）和 `isError`（是否发生错误）属性。
     *   **注意事项：**
         *   `name` 必须唯一，不能与其他工具重复。
         *   `description` 应该清晰简洁，描述工具的功能。
         *   `required` 数组应包含所有必需参数，以避免工具执行期间出错。
-        *   `outputSchema` 应该与 `default` 函数的返回值一致，以确保输出格式正确。
 
 3.  **实现工具逻辑（default 函数）：**
     *   同样在此文件中，导出一个 `default` 函数来实现工具的特定功能。
@@ -146,19 +144,7 @@ export const schema = {
       description: "问候语语言（en：英语，zh：中文，fr：法语）"
     }
   },
-  required: ["name"],
-  outputSchema: {
-    type: "object",
-    properties: {
-      content: {
-        type: "array",
-        items: {
-          type: { type: "string" },
-          text: { type: "string" }
-        }
-      }
-    }
-  }
+  required: ["name"]
 };
 
 // 实现工具逻辑

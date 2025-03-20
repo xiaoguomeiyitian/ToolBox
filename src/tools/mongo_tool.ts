@@ -12,28 +12,28 @@ const mongoClient = await MongoClient.connect(mongoUri, {
 /** mongo_tool 工具的参数列表 */
 export const schema = {
     name: "mongo_tool",
-    description: "Comprehensive MongoDB operations tool supporting queries, aggregations, CRUD operations, and index management",
+    description: "MongoDB tool for queries, CRUD, aggregations, and index management",
     type: "object",
     properties: {
         where: {
             type: "string",
-            description: "Query condition in JSON string format. Example: {\"age\": {\"$gt\": 18}} to find users older than 18.",
+            description: "Query condition (JSON string)",
         },
         dbName: {
             type: "string",
-            description: "The name of the MongoDB database to query.",
+            description: "MongoDB database name",
         },
         collectionName: {
             type: "string",
-            description: "The name of the MongoDB collection to query.",
+            description: "MongoDB collection name",
         },
         field: {
             type: "string",
-            description: "Field name for distinct operation.",
+            description: "Field name for distinct operation",
         },
         queryType: {
             type: "string",
-            description: "The type of MongoDB query to execute.",
+            description: "MongoDB query type",
             enum: [
                 "find",
                 "findOne",
@@ -56,15 +56,15 @@ export const schema = {
         },
         data: {
             type: "string",
-            description: "Data to be inserted/updated in JSON string format. Required for insert/update operations.",
+            description: "Data for insert/update (JSON string)",
         },
         updateOperators: {
             type: "string",
-            description: "Update operators in JSON string format. Required for update operations.",
+            description: "Update operators (JSON string)",
         },
         options: {
             type: "string",
-            description: "Additional options in JSON string format (e.g., sort, limit, skip, projection).",
+            description: "Additional options (JSON string)",
         },
         operationType: {
             type: "string",
@@ -81,70 +81,41 @@ export const schema = {
                 "collStats",
                 "dbStats"
             ],
-            description: "Database operation type for index and collection management"
+            description: "DB operation type (index/collection management)"
         },
         indexes: {
             type: "string",
-            description: "Index specification JSON for index operations"
+            description: "Index specification (JSON)"
         },
         indexOptions: {
             type: "string",
-            description: "Index options in JSON string format (e.g., unique, sparse, expireAfterSeconds)"
+            description: "Index options (JSON string)"
         },
         pipeline: {
             type: "string",
-            description: "Aggregation pipeline stages in JSON string format. Required for aggregate operations."
+            description: "Aggregation pipeline stages (JSON string)"
         },
         newName: {
             type: "string",
-            description: "New name for renameCollection operation"
+            description: "New name for renameCollection"
         },
         bulkOperations: {
             type: "string",
-            description: "Array of bulk write operations in JSON string format. Required for bulkWrite operation."
+            description: "Bulk write operations (JSON string)"
         },
         explain: {
             type: "boolean",
-            description: "When set to true, returns the execution plan information for the query instead of the results. Only applicable for find, findOne, and aggregate operations.",
+            description: "Return execution plan info instead of results",
             default: false
         },
         explainVerbosity: {
             type: "string",
             enum: ["queryPlanner", "executionStats", "allPlansExecution"],
-            description: "The verbosity mode for explain output. 'queryPlanner' provides basic info, 'executionStats' includes execution statistics, 'allPlansExecution' shows all evaluated plans.",
+            description: "Verbosity mode for explain output",
             default: "queryPlanner"
         }
     },
-    required: ["dbName"],
-    outputSchema: {
-        type: "object",
-        properties: {
-            content: {
-                type: "array",
-                items: {
-                    type: "object",
-                    properties: {
-                        type: {
-                            type: "string",
-                            description: "The content type (e.g., 'text')."
-                        },
-                        text: {
-                            type: "string",
-                            description: "The query result in JSON string format."
-                        }
-                    },
-                    required: ["type", "text"]
-                },
-                description: "An array containing the query result."
-            },
-            isError: {
-                type: "boolean",
-                description: "Indicates whether an error occurred during the query.",
-                default: false
-            }
-        },
-        required: ["content"]
-    }
+    required: ["dbName"]
 };
 
 // Destroy function

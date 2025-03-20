@@ -6,46 +6,46 @@ import path from 'path';
 // Define parameter schema
 export const schema = {
   name: "workflow_tool",
-  description: "Cross-tool workflow orchestration engine, supports serial/parallel execution of multiple tools and manages transactions",
+  description: "Orchestrate tools in serial/parallel workflows",
   type: "object",
   properties: {
     version: { 
       type: "string", 
       default: "1.0",
-      description: "Workflow definition format version (example: '1.0.1')" 
+      description: "Workflow definition version (e.g., '1.0.1')" 
     },
     steps: {
       type: "array",
-      description: "List of workflow steps (see example below)",
+      description: "List of workflow steps",
       items: {
         type: "object",
-        description: "Step configuration example: {tool:'compress_tool', args:{action:'zip'}, retry:2}",
+        description: "Step configuration (tool, args, retry)",
         properties: {
           tool: { 
             type: "string",
-            description: "Tool name (example: 'sftp_tool')" 
+            description: "Tool name (e.g., 'sftp_tool')" 
           },
           args: { 
             type: "object",
-            description: "Tool parameters (example: {action:'upload', localPath:'/tmp'})" 
+            description: "Tool parameters (e.g., {action:'upload'})" 
           },
           retry: { 
             type: "number", 
             default: 0,
-            description: "Number of retries (example: 3 means retry up to 3 times)" 
+            description: "Number of retries" 
           },
           timeout: { 
             type: "number",
-            description: "Timeout (example: 5000 means 5 seconds timeout)" 
+            description: "Timeout (ms)" 
           },
           parallel: { 
             type: "boolean", 
             default: false,
-            description: "Parallel execution (example: true means execute in parallel with subsequent steps)" 
+            description: "Execute in parallel" 
           },
           compensation: {
             type: "object",
-            description: "Compensation configuration example: {tool:'sftp_tool', args:{action:'delete'}}",
+            description: "Compensation config (tool, args)",
             properties: {
               tool: { type: "string" },
               args: { type: "object" }
@@ -56,41 +56,10 @@ export const schema = {
     },
     outputFile: {
       type: "string",
-      description: "Path to the output file (optional, supports absolute or relative paths, defaults to the log directory)"
+      description: "Path to output file (optional)"
     }
   },
-  required: ["steps"],
-  outputSchema: {
-    type: "object",
-    description: "Detailed workflow execution report",
-    properties: {
-      workflowStatus: { 
-        type: "string",
-        enum: ["success", "failed", "partial_success"],
-        description: "Overall execution status" 
-      },
-      executionTime: { 
-        type: "number",
-        description: "Total execution time (milliseconds)" 
-      },
-      steps: {
-        type: "array",
-        description: "Step execution details",
-        items: {
-          type: "object",
-          properties: {
-            index: { type: "number" },
-            tool: { type: "string" },
-            status: { type: "string" },
-            startTime: { type: "string" },
-            duration: { type: "number" },
-            result: { type: "object" },
-            error: { type: "string" }
-          }
-        }
-      }
-    }
-  }
+  required: ["steps"]
 };
 
 function getOutputPath(outputFile?: string) {

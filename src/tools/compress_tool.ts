@@ -7,7 +7,7 @@ import fse from 'fs-extra';
 
 export const schema = {
     name: "compress_tool",
-    description: "Compress and extract files using zip/tar/tar.gz formats",
+    description: "Compress/extract files (zip, tar, tar.gz)",
     type: "object",
     properties: {
         action: {
@@ -29,28 +29,7 @@ export const schema = {
             enum: ["zip", "tar", "tar.gz"],
         },
     },
-    required: ["action", "sourcePath", "destinationPath", "format"],
-    outputSchema: {
-        type: "object",
-        properties: {
-            content: {
-                type: "array",
-                items: {
-                    type: "object",
-                    properties: {
-                        type: { type: "string" },
-                        text: { type: "string" }
-                    },
-                    required: ["type", "text"]
-                }
-            },
-            isError: {
-                type: "boolean",
-                default: false
-            }
-        },
-        required: ["content"]
-    }
+    required: ["action", "sourcePath", "destinationPath", "format"]
 };
 
 async function compressZip(source: string, dest: string) {

@@ -8,53 +8,28 @@ let sshConnections: { [key: string]: Client } = {};
 // 定义 sftp_tool 工具的参数列表
 export const schema = {
     name: "sftp_tool",
-    description: "Connect to SSH server and upload or download files",
+    description: "Connect to SSH server and upload/download files",
     type: "object",
     properties: {
         serverName: {
             type: "string",
-            description: "The name of the SSH server to connect to.",
+            description: "SSH server name",
         },
         action: {
             type: "string",
-            description: "The action to perform: 'upload' or 'download'.",
+            description: "Action: upload or download",
             enum: ["upload", "download"],
         },
         localPath: {
             type: "string",
-            description: "The local file path. Absolute path is required.",
+            description: "Local file path (absolute)",
         },
         remotePath: {
             type: "string",
-            description: "The remote file path.",
+            description: "Remote file path",
         },
     },
-    required: ["serverName", "action", "localPath", "remotePath"],
-    outputSchema: {
-        type: "object",
-        properties: {
-            content: {
-                type: "array",
-                items: {
-                    type: {
-                        type: "string",
-                        description: "The content type (e.g., 'text')."
-                    },
-                    text: {
-                        type: "string",
-                        description: "The query result in JSON string format."
-                    }
-                },
-                description: "An array containing the query result."
-            },
-            isError: {
-                type: "boolean",
-                description: "Indicates whether an error occurred during the query.",
-                default: false
-            }
-        },
-        required: ["content"]
-    }
+    required: ["serverName", "action", "localPath", "remotePath"]
 };
 
 /**

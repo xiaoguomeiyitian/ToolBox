@@ -10,43 +10,14 @@ export const schema = {
     properties: {
         title: {
             type: "string",
-            description: "Title of the note",
+            description: "Note title",
         },
         content: {
             type: "string",
-            description: "Text content of the note",
+            description: "Note content",
         },
     },
-    required: ["title", "content"],
-    outputSchema: {
-        type: "object",
-        properties: {
-            content: {
-                type: "array",
-                items: {
-                    type: "object",
-                    properties: {
-                        type: {
-                            type: "string",
-                            description: "The content type (e.g., 'text')."
-                        },
-                        text: {
-                            type: "string",
-                            description: "The query result in JSON string format."
-                        }
-                    },
-                    required: ["type", "text"]
-                },
-                description: "An array containing the query result."
-            },
-            isError: {
-                type: "boolean",
-                description: "Indicates whether an error occurred during the query.",
-                default: false
-            }
-        },
-        required: ["content"]
-    }
+    required: ["title", "content"]
 };
 
 export default async (request: any) => {

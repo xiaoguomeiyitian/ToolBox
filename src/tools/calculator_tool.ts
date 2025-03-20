@@ -3,7 +3,7 @@ import { Decimal } from 'decimal.js';
 
 export const schema = {
   name: "calculator_tool",
-  description: "A calculator_tool tool that supports various types of mathematical operations.",
+  description: "Calculator tool supporting various math operations.",
   type: "object",
   properties: {
     calculation_type: {
@@ -21,15 +21,15 @@ export const schema = {
         "perform_set_theory",         // 集合论运算 - 支持并集、交集、差集、对称差集、子集检查
         "perform_complex_number"      // 复数运算 - 支持加、减、乘、除、模、辐角、共轭
       ],
-      description: "The type of mathematical calculation to perform.",
+      description: "The type of calculation to perform.",
     },
     expression: {
       type: "string",
-      description: "The mathematical expression to calculate (used when calculation_type is 'evaluate_expression').",
+      description: "The mathematical expression to calculate.",
     },
     function_name: {
       type: "string",
-      description: "The name of the function to calculate (used when calculation_type is 'calculate_function').",
+      description: "The name of the function to calculate.",
     },
     function_argument: {
       type: "number",
@@ -38,27 +38,27 @@ export const schema = {
     statistics_operation: {
       type: "string",
       enum: ["mean", "median", "mode", "standard_deviation", "variance", "correlation", "regression"],
-      description: "The type of statistical calculation to perform (used when calculation_type is 'calculate_statistics').",
+      description: "The type of statistical calculation to perform.",
     },
     data_points: {
       type: "array",
       items: { type: "number" },
-      description: "The array of data points for statistical calculations.",
+      description: "The array of data points.",
     },
     data_set_x: {
       type: "array",
       items: { type: "number" },
-      description: "The dataset X for bivariate statistics (only when needed).",
+      description: "The dataset X for bivariate statistics.",
     },
     data_set_y: {
       type: "array",
       items: { type: "number" },
-      description: "The dataset Y for bivariate statistics (only when needed).",
+      description: "The dataset Y for bivariate statistics.",
     },
     geometry_operation: {
       type: "string",
       enum: ["area_circle", "area_rectangle", "volume_cube"],
-      description: "The type of geometric calculation to perform (used when calculation_type is 'perform_geometry').",
+      description: "The type of geometric calculation to perform.",
     },
     radius: {
       type: "number",
@@ -83,7 +83,7 @@ export const schema = {
     financial_math_operation: {
       type: "string",
       enum: ["simple_interest", "compound_interest", "present_value", "future_value"],
-      description: "The type of financial math calculation to perform (used when calculation_type is 'perform_financial_math').",
+      description: "The type of financial math calculation to perform.",
     },
     principal: {
       type: "number",
@@ -104,7 +104,7 @@ export const schema = {
     logic_operation: {
       type: "string",
       enum: ["AND", "OR", "NOT", "XOR"],
-      description: "The type of logic operation to perform (used when calculation_type is 'perform_logic_operations').",
+      description: "The type of logic operation to perform.",
     },
     operand_a: {
       type: "boolean",
@@ -118,15 +118,15 @@ export const schema = {
     number_theory_operation: {
       type: "string",
       enum: ["gcd", "lcm", "prime_factorization", "is_prime", "modular_exponentiation"],
-      description: "The type of number theory operation to perform (used when calculation_type is 'perform_number_theory')."
+      description: "The type of number theory operation."
     },
     number_a: {
       type: "integer",
-      description: "The first number for number theory operations."
+      description: "The first number."
     },
     number_b: {
       type: "integer",
-      description: "The second number for number theory operations (if needed)."
+      description: "The second number (if needed)."
     },
     number_theory_modulus: {
       type: "integer",
@@ -136,21 +136,21 @@ export const schema = {
     combinatorics_operation: {
       type: "string",
       enum: ["permutation", "combination", "factorial", "binomial_coefficient"],
-      description: "The type of combinatorics operation to perform (used when calculation_type is 'perform_combinatorics')."
+      description: "The type of combinatorics operation."
     },
     n_value: {
       type: "integer",
-      description: "The n value for combinatorics operations."
+      description: "The n value."
     },
     r_value: {
       type: "integer",
-      description: "The r value for combinatorics operations (if needed)."
+      description: "The r value (if needed)."
     },
     // 概率计算的属性
     probability_operation: {
       type: "string",
       enum: ["probability_event", "conditional_probability", "bayes_theorem"],
-      description: "The type of probability calculation to perform (used when calculation_type is 'calculate_probability')."
+      description: "The type of probability calculation."
     },
     probability_a: {
       type: "number",
@@ -172,23 +172,23 @@ export const schema = {
     set_theory_operation: {
       type: "string",
       enum: ["union", "intersection", "difference", "symmetric_difference", "is_subset"],
-      description: "The type of set theory operation to perform (used when calculation_type is 'perform_set_theory')."
+      description: "The type of set theory operation."
     },
     set_a: {
       type: "array",
       items: { type: "number" },
-      description: "The first set for set theory operations."
+      description: "The first set."
     },
     set_b: {
       type: "array",
       items: { type: "number" },
-      description: "The second set for set theory operations."
+      description: "The second set."
     },
     // 复数运算的属性
     complex_number_operation: {
       type: "string",
       enum: ["add", "subtract", "multiply", "divide", "modulus", "argument", "conjugate"],
-      description: "The type of complex number operation to perform (used when calculation_type is 'perform_complex_number')."
+      description: "The type of complex number operation."
     },
     complex_a_real: {
       type: "number",
@@ -210,27 +210,10 @@ export const schema = {
       type: "number",
       enum: [32, 64, 128],
       default: 64,
-      description: "Calculation precision level (32, 64, 128)",
+      description: "Calculation precision level.",
     },
   },
-  required: ["calculation_type"],
-  outputSchema: {
-    type: "object",
-    properties: {
-      content: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            type: { type: "string", enum: ["text"] },
-            text: { type: "string" },
-          },
-          required: ["type", "text"],
-        },
-      },
-      isError: { type: "boolean" },
-    },
-  },
+  required: ["calculation_type"]
 };
 
 export async function destroy() {
