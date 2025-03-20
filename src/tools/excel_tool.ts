@@ -98,7 +98,17 @@ async function writeXLSX(params: WriteParams) {
   try {
     const workbook = XLSX.utils.book_new();
     const sheetName = params.options?.sheetName || "Sheet1";
-    const sheet = XLSX.utils.json_to_sheet(params.data);
+    const sheet = XLSX.utils.json_to_sheet(params.data.map(item => {
+      const newItem: any = {};
+      for (const key in item) {
+        if (typeof item[key] === 'string') {
+          newItem[key] = JSON.stringify(item[key]);
+        } else {
+          newItem[key] = item[key];
+        }
+      }
+      return newItem;
+    }));
     XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
     XLSX.writeFile(workbook, params.filePath);
     return {
