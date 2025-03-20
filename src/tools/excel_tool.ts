@@ -1,7 +1,7 @@
-import * as XLSX from 'xlsx';
 import * as csv from 'fast-csv';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as exceljs from 'exceljs';
 
 // Define parameter schema
 export const schema = {
@@ -11,8 +11,8 @@ export const schema = {
   properties: {
     action: {
       type: "string",
-      enum: ["read", "write"],
-      description: "Action to perform: read or write"
+      enum: ["read", "write", "convert_json_to_xlsx"],
+      description: "Action to perform: read, write, or convert_json_to_xlsx"
     },
     filePath: {
       type: "string",
@@ -45,15 +45,27 @@ export const schema = {
         }
       },
       additionalProperties: true
+    },
+    stream: {
+      type: "boolean",
+      default: false,
+      description: "Enable streaming for large files"
+    },
+    chunkSize: {
+      type: "number",
+      default: 1000,
+      description: "Chunk size (rows) for streaming"
     }
   },
   required: ["action", "filePath", "format"]
 };
 
 interface ReadParams {
-  filePath: string; // 绝对路径
+  filePath: string;
   format: 'xlsx' | 'xls' | 'csv';
-  dateConversion?: boolean; // 是否转换日期格式
+  dateConversion?: boolean;
+  stream?: boolean;
+  chunkSize?: number;
 }
 
 interface WriteParams {
@@ -64,22 +76,57 @@ interface WriteParams {
     sheetName?: string;
     headerRow?: boolean;
   };
+  stream?: boolean;
+  chunkSize?: number;
 }
 
 async function readXLSX(params: ReadParams) {
   try {
-    const workbook = XLSX.read(fs.readFileSync(params.filePath), { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const data = XLSX.utils.sheet_to_json(sheet);
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(data, null, 2),
-        },
-      ],
-    };
+    if (params.stream) {
+      const workbook = new exceljs.default.Workbook();
+      await workbook.xlsx.readFile(params.filePath);
+      const sheet = workbook.getWorksheet(1);
+      const results: any[] = [];
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber > 1) { // Skip header row
+          const rowData: any = {};
+          row.eachCell((cell, colNumber) => {
+            rowData[sheet.getRow(1).getCell(colNumber).value as string] = cell.value;
+          });
+          results.push(rowData);
+        }
+      });
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(results, null, 2),
+          },
+        ],
+      };
+    } else {
+      const workbook = new exceljs.default.Workbook();
+      await workbook.xlsx.readFile(params.filePath);
+      const sheet = workbook.getWorksheet(1);
+      const results: any[] = [];
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber > 1) { // Skip header row
+          const rowData: any = {};
+          row.eachCell((cell, colNumber) => {
+            rowData[sheet.getRow(1).getCell(colNumber).value as string] = cell.value;
+          });
+          results.push(rowData);
+        }
+      });
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(results, null, 2),
+          },
+        ],
+      };
+    }
   } catch (error: any) {
     console.error(error);
     return {
@@ -96,29 +143,55 @@ async function readXLSX(params: ReadParams) {
 
 async function writeXLSX(params: WriteParams) {
   try {
-    const workbook = XLSX.utils.book_new();
-    const sheetName = params.options?.sheetName || "Sheet1";
-    const sheet = XLSX.utils.json_to_sheet(params.data.map(item => {
-      const newItem: any = {};
-      for (const key in item) {
-        if (typeof item[key] === 'string') {
-          newItem[key] = JSON.stringify(item[key]);
-        } else {
-          newItem[key] = item[key];
-        }
-      }
-      return newItem;
-    }));
-    XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
-    XLSX.writeFile(workbook, params.filePath);
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(`XLSX file written successfully to ${params.filePath}`, null, 2),
-        },
-      ],
-    };
+    if (params.stream) {
+      const workbook = new exceljs.default.Workbook();
+      const sheet = workbook.addWorksheet(params.options?.sheetName || 'Sheet1');
+
+      // Add headers
+      const headers = Object.keys(params.data[0]);
+      sheet.addRow(headers);
+
+      // Add data rows
+      params.data.forEach(item => {
+        const row = headers.map(header => item[header]);
+        sheet.addRow(row);
+      });
+
+      await workbook.xlsx.writeFile(params.filePath);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `XLSX file written successfully to ${params.filePath} using streaming`,
+          },
+        ],
+      };
+    } else {
+      const workbook = new exceljs.default.Workbook();
+      const sheet = workbook.addWorksheet(params.options?.sheetName || 'Sheet1');
+
+      // Add headers
+      const headers = Object.keys(params.data[0]);
+      sheet.addRow(headers);
+
+      // Add data rows
+      params.data.forEach(item => {
+        const row = headers.map(header => item[header]);
+        sheet.addRow(row);
+      });
+
+      await workbook.xlsx.writeFile(params.filePath);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `XLSX file written successfully to ${params.filePath}`,
+          },
+        ],
+      };
+    }
   } catch (error: any) {
     console.error(error);
     return {
@@ -197,7 +270,7 @@ async function writeCSV(params: WriteParams) {
 // Implement tool logic
 export default async function (request: any) {
   try {
-    const { action, filePath, format, data, options } = request.params.arguments;
+    const { action, filePath, format, data, options, stream, chunkSize } = request.params.arguments;
 
     // Validate file path
     if (!path.isAbsolute(filePath)) {
@@ -222,7 +295,7 @@ export default async function (request: any) {
       switch (format) {
         case "xlsx":
         case "xls":
-          return readXLSX({ filePath, format });
+          return readXLSX({ filePath, format, stream, chunkSize });
         case "csv":
           return readCSV({ filePath, format });
         default:
@@ -233,13 +306,17 @@ export default async function (request: any) {
       switch (format) {
         case "xlsx":
         case "xls":
-          return writeXLSX({ filePath, data, format, options });
+          return writeXLSX({ filePath, data, format, options, stream, chunkSize });
         case "csv":
           return writeCSV({ filePath, data, format, options });
         default:
           throw new Error(`Unsupported format: ${format}`);
       }
-    } else {
+    } else if (action === "convert_json_to_xlsx") {
+        const jsonData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        return writeXLSX({ filePath: filePath.replace('.json', '.xlsx'), data: jsonData, format: 'xlsx', options: options, stream: stream, chunkSize: chunkSize });
+    }
+     else {
       throw new Error(`Invalid action: ${action}`);
     }
   } catch (error: any) {
