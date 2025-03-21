@@ -202,7 +202,7 @@
 | data | string | 否 | 要插入/更新的 JSON 字符串格式的数据。insert/update 操作需要。 |  |
 | updateOperators | string | 否 | JSON 字符串格式的更新运算符。update 操作需要。 |  |
 | options | string | 否 | JSON 字符串格式的附加选项 (例如，sort、limit、skip、projection)。 |  |
-| operationType | string | 否 | 索引和集合管理的数据库操作类型 | ["createIndex", "createIndexes", "dropIndex", "dropIndexes", "listIndexes", "listCollections", "createCollection", "dropCollection", "renameCollection", "collStats", "dbStats"] |
+| operationType | string | 否 | 索引和集合管理的数据库操作类型 | ["createIndex", "createIndexes", "dropIndex", "dropIndexes", "listIndexes", "listCollections", "colls", "createCollection", "dropCollection", "renameCollection", "collStats", "dbStats"] |
 | indexes | string | 否 | 索引操作的索引规范 JSON |  |
 | indexOptions | string | 否 | JSON 字符串格式的索引选项 (例如，unique、sparse、expireAfterSeconds) |  |
 | pipeline | string | 否 | JSON 字符串格式的聚合管道阶段。aggregate 操作需要。 |  |
@@ -401,11 +401,13 @@
 **输入规范**:
 | 参数 | 类型 | 必填 | 描述 | 可选值 |
 |---|---|---|---|---|
-| action | string | 是 | 要执行的操作：读取或写入 | ["read", "write"] |
+| action | string | 是 | 要执行的操作：读取、写入或 convert_json_to_xlsx | ["read", "write", "convert_json_to_xlsx"] |
 | filePath | string | 是 | 文件的绝对路径 |  |
 | format | string | 是 | 文件格式 | ["xlsx", "xls", "csv"] |
 | data | array | 否 | 要写入文件的数据（写入操作需要） |  |
 | options | object | 否 | 附加选项 |  |
+| stream | boolean | 否 | 启用大文件流式传输 |  |
+| chunkSize | number | 否 | 流式传输时的块大小（行数） |  |
 
 **输出规范**:
 ```typescript

@@ -75,6 +75,7 @@ export const schema = {
                 "dropIndexes",
                 "listIndexes",
                 "listCollections",
+                "colls",
                 "createCollection",
                 "dropCollection",
                 "renameCollection",
@@ -230,6 +231,10 @@ export default async (request: any) => {
                 case "listCollections":
                     const filter = args.where ? safeParseJSON(args.where) : {};
                     results = await db.listCollections(filter, options).toArray();
+                    break;
+                case "colls":
+                    const filterColls = args.where ? safeParseJSON(args.where) : {};
+                    results = await db.listCollections(filterColls, options).toArray();
                     break;
 
                 case "dropCollection":

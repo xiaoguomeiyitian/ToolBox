@@ -202,7 +202,7 @@
 | data | string | No | Data to be inserted/updated in JSON string format. Required for insert/update operations. |  |
 | updateOperators | string | No | Update operators in JSON string format. Required for update operations. |  |
 | options | string | No | Additional options in JSON string format (e.g., sort, limit, skip, projection). |  |
-| operationType | string | No | Database operation type for index and collection management | ["createIndex", "createIndexes", "dropIndex", "dropIndexes", "listIndexes", "listCollections", "createCollection", "dropCollection", "renameCollection", "collStats", "dbStats"] |
+| operationType | string | No | Database operation type for index and collection management | ["createIndex", "createIndexes", "dropIndex", "dropIndexes", "listIndexes", "listCollections", "colls", "createCollection", "dropCollection", "renameCollection", "collStats", "dbStats"] |
 | indexes | string | No | Index specification JSON for index operations |  |
 | indexOptions | string | No | Index options in JSON string format (e.g., unique, sparse, expireAfterSeconds) |  |
 | pipeline | string | No | Aggregation pipeline stages in JSON string format. Required for aggregate operations. |  |
@@ -401,11 +401,13 @@
 **Input Schema**:
 | Parameter | Type | Required | Description | Enum Values |
 |---|---|---|---|---|
-| action | string | Yes | Action to perform: read or write | ["read", "write"] |
+| action | string | Yes | Action to perform: read, write, or convert_json_to_xlsx | ["read", "write", "convert_json_to_xlsx"] |
 | filePath | string | Yes | Absolute path to the file |  |
 | format | string | Yes | File format | ["xlsx", "xls", "csv"] |
 | data | array | No | Data to write to the file (required for write action) |  |
 | options | object | No | Additional options |  |
+| stream | boolean | No | Enable streaming for large files |  |
+| chunkSize | number | No | Chunk size (rows) for streaming |  |
 
 **Output Schema**:
 ```typescript
