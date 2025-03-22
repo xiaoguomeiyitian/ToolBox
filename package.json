@@ -48,6 +48,7 @@
     "vitest": "^3.0.8"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
     "@modelcontextprotocol/sdk": "^1.7.0",
     "archiver": "^7.0.1",
     "decimal.js": "^10.5.0",

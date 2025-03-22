@@ -194,7 +194,7 @@
 **输入规范**:
 | 参数 | 类型 | 必填 | 描述 | 可选值 |
 |---|---|---|---|---|
-| where | string | 否 | JSON 字符串格式的查询条件。 例如: {\"age\": {\"$gt\": 18}} 查找 18 岁以上的用户。 |  |
+| where | string | 否 | JSON 字符串格式的查询条件。 例如: {\\"age\\": {\\"$gt\\": 18}} 查找 18 岁以上的用户。 |  |
 | dbName | string | 是 | 要查询的 MongoDB 数据库的名称。 |  |
 | collectionName | string | 否 | 要查询的 MongoDB 集合的名称。 |  |
 | field | string | 否 | distinct 操作的字段名称。 |  |
@@ -508,7 +508,7 @@
 | r_value | integer | 否 | 组合数学运算的 r 值（如果需要）。 |  |
 | probability_operation | string | 否 | 要执行的概率计算的类型（当 calculation_type 为 'calculate_probability' 时使用）。 | ["probability_event", "conditional_probability", "bayes_theorem"] |
 | probability_a | number | 否 | 事件 A 的概率（介于 0 和 1 之间）。 |  |
-| probability_b | number | No | The probability of event B (between 0 and 1). |  |
+| probability_b | number | 否 | 事件 B 的概率（介于 0 和 1 之间）。 |  |
 | probability_a_given_b | number | 否 | A 给定 B 的条件概率（介于 0 和 1 之间）。 |  |
 | probability_b_given_a | number | 否 | B 给定 A 的条件概率（介于 0 和 1 之间）。 |  |
 | set_theory_operation | string | 否 | 要执行的集合论运算的类型（当 calculation_type 为 'perform_set_theory' 时使用）。 | ["union", "intersection", "difference", "symmetric_difference", "is_subset"] |
@@ -521,7 +521,7 @@
 | complex_b_imaginary | number | 否 | 第二个复数的虚部（如果需要）。 |  |
 | precision_level | number | 否 | 计算精度级别 (32, 64, 128) | [32, 64, 128] |
 
-**输出规范**:
+**Output Schema**:
 ```typescript
 {
   content: Array<{ type: string; text: string }>;
@@ -529,7 +529,7 @@
 }
 ```
 
-**请求示例**:
+**Example Request**:
 ```json
 {
   "calculation_type": "evaluate_expression",
@@ -537,7 +537,7 @@
 }
 ```
 
-**错误处理**:
+**Error Handling**:
 - 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
 
 ---
@@ -630,19 +630,19 @@
 ---
 
 ### image_tool
-**描述**: 压缩图像，支持单个文件和目录的批量处理。
+**描述**: 压缩图像，批量处理文件/目录。
 
 **输入规范**:
 | 参数 | 类型 | 必填 | 描述 | 可选值 |
 |---|---|---|---|---|
-| sourcePath | string | 是 | 源文件或目录的绝对路径 |  |
-| outputPath | string | 否 | 输出目录的绝对路径（默认为源目录） |  |
+| sourcePath | string | 是 | 源文件或目录路径 |  |
+| outputPath | string | 否 | 输出目录路径（默认为源目录） |  |
 | quality | number | 否 | 压缩质量（1-100，默认为 75） |  |
 | resize | object | 否 | 调整大小选项 |  |
 | format | string | 否 | 输出格式 | jpeg, png, webp, avif, tiff, gif |
 | mode | string | 否 | 执行模式（同步或异步） | sync, async |
 | recursive | boolean | 否 | 是否递归处理子目录 |  |
-| backupDir | string | 否 | 备份目录的绝对路径（如果未指定，则不备份） |  |
+| backupDir | string | 否 | 备份目录路径（可选） |  |
 
 **Output Schema**:
 ```typescript
@@ -661,6 +661,41 @@
 ```
 
 **Error Handling**:
-- Returns `isError: true` with error message in `content.text`
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
 
 ---
+
+### gemini_image_tool
+**描述**: 使用 Gemini 生成或编辑图片
+
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
+|---|---|---|---|---|
+| operation | string | 是 | 操作类型 (generate_image: 生成新图片, edit_image: 编辑现有图片) | ["generate_image", "edit_image"] |
+| prompt | string | 是 | 图片生成/编辑提示词 |  |
+| inputImage | string | 否 | 待编辑图片绝对路径（仅edit_image需要） |  |
+| outputDir | string | 是 | 输出目录绝对路径（例如：E:\\my_images） |  |
+| fileName | string | 否 | 输出文件名模板 |  |
+| temperature | number | 否 | Temperature of the model |  |
+| topP | number | 否 | Top P of the model |  |
+| topK | number | 否 | Top K of the model |  |
+| maxOutputTokens | number | 否 | Maximum number of output tokens |  |
+
+**输出规范**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**Example Request**:
+```json
+{
+  "operation": "generate_image",
+  "prompt": "宝箱"
+}
+```
+
+**错误处理**:
+- 返回 `isError: true` 并在 `content.text` 字段中包含错误消息

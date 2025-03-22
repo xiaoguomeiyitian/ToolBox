@@ -630,19 +630,19 @@ To avoid directory errors, ensure that relative paths are resolved from the `bui
 ---
 
 ### image_tool
-**Description**: Compresses images, supporting single files and batch processing of directories.
+**Description**: Compress images, batch process files/dirs.
 
 **Input Schema**:
 | Parameter | Type | Required | Description | Enum Values |
 |---|---|---|---|---|
-| sourcePath | string | Yes | Absolute path to the source file or directory |  |
-| outputPath | string | No | Absolute path to the output directory (defaults to source directory) |  |
+| sourcePath | string | Yes | Source file or directory path |  |
+| outputPath | string | No | Output directory path (defaults to source) |  |
 | quality | number | No | Compression quality (1-100, defaults to 75) |  |
 | resize | object | No | Resize options |  |
 | format | string | No | Output format | jpeg, png, webp, avif, tiff, gif |
 | mode | string | No | Execution mode (sync or async) | sync, async |
 | recursive | boolean | No | Process subdirectories recursively |  |
-| backupDir | string | No | Absolute path to the backup directory (if not specified, no backup) |  |
+| backupDir | string | No | Backup directory path (optional) |  |
 
 **Output Schema**:
 ```typescript
@@ -664,3 +664,38 @@ To avoid directory errors, ensure that relative paths are resolved from the `bui
 - Returns `isError: true` with error message in `content.text`
 
 ---
+
+### gemini_image_tool
+**Description**: Generate or edit images with Gemini
+
+**Input Schema**:
+| Parameter | Type | Required | Description | Enum Values |
+|---|---|---|---|---|
+| operation | string | Yes | generate_image: Generate new image, edit_image: Edit existing image | `["generate_image", "edit_image"]` |
+| prompt | string | Yes | Prompt for image generation/editing |  |
+| inputImage | string | No | Image path (required for edit_image) |  |
+| outputDir | string | Yes | Output directory path |  |
+| fileName | string | No | Output file name template |  |
+| temperature | number | No | Temperature of the model |  |
+| topP | number | No | Top P of the model |  |
+| topK | number | No | Top K of the model |  |
+| maxOutputTokens | number | No | Maximum number of output tokens |  |
+
+**Output Schema**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**Example Request**:
+```json
+{
+  "operation": "generate_image",
+  "prompt": "A treasure chest"
+}
+```
+
+**Error Handling**:
+- Returns `isError: true` with error message in `content.text`

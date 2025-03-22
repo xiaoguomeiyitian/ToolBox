@@ -1,10 +1,8 @@
 import { spawn } from 'child_process';
-import { promisify } from 'util';
 import { platform } from 'os';
 import fs from 'fs';
-import { logFile, cliLogFile } from '../config.js';
+import { cliLogFile } from '../config.js';
 
-const setTimeoutPromise = promisify(setTimeout);
 
 export const schema = {
   name: "cli_tool",

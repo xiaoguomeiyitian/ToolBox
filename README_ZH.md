@@ -122,7 +122,8 @@ npm run watch
     "MONGO_URI": "mongodb://user:password@host:port/db",
     "MONGO_INDEX_OPS": "true",
     "REDIS_URI": "redis://:password@host:port",
-    "SSH_server1_URI": "username:password@host:port"
+    "SSH_server1_URI": "username:password@host:port",
+    "GEMINI_API_KEY":"GEMINI_API_KEY",
   },
   "disabled": false,
   "autoApprove": []

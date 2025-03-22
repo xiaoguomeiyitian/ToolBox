@@ -8,17 +8,17 @@ const readdir = promisify(fs.readdir);
 const mkdir = promisify(fs.mkdir);
 
 export const schema = {
-  name: "image_tool",
-  description: "Compresses images, supporting single files and batch processing of directories.",
+  name: "img_tool",
+  description: "Compress images, batch process files/dirs.",
   type: "object",
   properties: {
     sourcePath: {
       type: "string",
-      description: "Absolute path to the source file or directory"
+      description: "Source file or directory path"
     },
     outputPath: {
       type: "string",
-      description: "Absolute path to the output directory (defaults to source directory)"
+      description: "Output directory path (defaults to source)"
     },
     quality: {
       type: "number",
@@ -59,7 +59,7 @@ export const schema = {
     },
     backupDir: {
       type: "string",
-      description: "Absolute path to the backup directory (if not specified, no backup)"
+      description: "Backup directory path (optional)"
     }
   },
   required: ["sourcePath"]
