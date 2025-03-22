@@ -626,3 +626,39 @@ To avoid directory errors, ensure that relative paths are resolved from the `bui
 - Returns `isError: true` with error message in `content.text`
 
 ---
+
+### image_tool
+**Description**: Compresses images, supporting single files and batch processing of directories.
+
+**Input Schema**:
+| Parameter | Type | Required | Description | Enum Values |
+|---|---|---|---|---|
+| sourcePath | string | Yes | Absolute path to the source file or directory |  |
+| outputPath | string | No | Absolute path to the output directory (defaults to source directory) |  |
+| quality | number | No | Compression quality (1-100, defaults to 75) |  |
+| resize | object | No | Resize options |  |
+| format | string | No | Output format | jpeg, png, webp, avif, tiff, gif |
+| mode | string | No | Execution mode (sync or async) | sync, async |
+| recursive | boolean | No | Process subdirectories recursively |  |
+| backupDir | string | No | Absolute path to the backup directory (if not specified, no backup) |  |
+
+**Output Schema**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**Example Request**:
+```json
+{
+  "sourcePath": "/path/to/image.png",
+  "quality": 60
+}
+```
+
+**Error Handling**:
+- Returns `isError: true` with error message in `content.text`
+
+---

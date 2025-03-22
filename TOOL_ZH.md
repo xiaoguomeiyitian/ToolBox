@@ -138,7 +138,7 @@
 **输出规范**:
 ```typescript
 {
-  content: Array<{ type: string; text: string }>;
+  content: Array<{ type: "text", text: string }>;
   isError?: boolean;
 }
 ```
@@ -564,7 +564,7 @@
 | mode | string | 否 | 执行模式：sync - 同步阻塞，async - 异步非阻塞 | ["sync", "async"] |
 | timeout | number | 否 | 命令超时时间（秒） |  |
 | cwd | string | 否 | 工作目录解析规则：• 绝对路径：/absolute/path/here• 相对路径：build/ + relativePath• 空字符串：使用 build/ 作为根目录⚠️ 重要提示：不引用 src/ 目录示例：- 命令在 build/ 目录中运行- "cwd": "config" → 解析为 build/config/ |  |
-| platform | string | 否 | 强制执行上下文：• "win32"：使用 Windows 路径语义• "linux"：使用 POSIX 路径语义• "auto"：匹配 build 目录的操作系统类型 | ["auto", "win32", "linux", "darwin"] |
+| platform | string | 否 | 强制执行上下文：• "win32"：使用 Windows 路径语义• "linux"：使用 POSIX 路径语义• "auto"：匹配 build 目录的操作系统类型 | ["auto", "win32", "darwin"] |
 | safe_mode | boolean | 否 | 启用危险命令过滤 |  |
 
 **输出规范**:
@@ -624,5 +624,41 @@
 
 **错误处理**:
 - 返回 `isError: true` 并在 `content.text` 字段中包含错误消息
+
+---
+
+### image_tool
+**描述**: Compresses images, supporting single files and batch processing of directories.
+
+**Input Schema**:
+| Parameter | Type | Required | Description | Enum Values |
+|---|---|---|---|---|
+| sourcePath | string | Yes | Absolute path to the source file or directory |  |
+| outputPath | string | No | Absolute path to the output directory (defaults to source directory) |  |
+| quality | number | No | Compression quality (1-100, defaults to 75) |  |
+| resize | object | No | Resize options |  |
+| format | string | No | Output format | jpeg, png, webp, avif, tiff, gif |
+| mode | string | No | Execution mode (sync or async) | sync, async |
+| recursive | boolean | No | Process subdirectories recursively |  |
+| backupDir | string | No | Absolute path to the backup directory (if not specified, no backup) |  |
+
+**Output Schema**:
+```typescript
+{
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+```
+
+**Example Request**:
+```json
+{
+  "sourcePath": "/path/to/image.png",
+  "quality": 60
+}
+```
+
+**Error Handling**:
+- Returns `isError: true` with error message in `content.text`
 
 ---
