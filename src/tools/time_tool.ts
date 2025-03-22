@@ -16,6 +16,14 @@ export const schema = {
         timezone: {
             type: "string",
             description: "Timezone (e.g., Asia/Shanghai)"
+        },
+        timestamp: {
+            type: "number",
+            description: "Timestamp to convert"
+        },
+        targetTimezone: {
+            type: "string",
+            description: "Target timezone for timestamp conversion (e.g., America/New_York)"
         }
     },
     required: []
@@ -25,7 +33,8 @@ enum TimeFormat {
     ISO = 'iso',
     TIMESTAMP = 'timestamp',
     LOCAL = 'local',
-    CUSTOM = 'custom'
+    CUSTOM = 'custom',
+    CONVERT_TIMESTAMP = 'convert_timestamp'
 }
 
 const timezoneWhitelist = ['Asia/Shanghai', 'America/New_York'];
@@ -35,49 +44,70 @@ export default async (request: any) => {
         const format: TimeFormat = request.params.arguments?.format || TimeFormat.ISO;
         const pattern: string = request.params.arguments?.pattern;
         const timezone: string = request.params.arguments?.timezone;
+        const timestamp: number = request.params.arguments?.timestamp;
+        const targetTimezone: string = request.params.arguments?.targetTimezone;
 
-        let now = new Date();
-
-        if (timezone && timezoneWhitelist.indexOf(timezone) === -1) {
-            throw new Error(`Invalid timezone: ${timezone}`);
-        }
-
-        let date = timezone ? new Date(now.toLocaleString('en-US', { timeZone: timezone })) : now;
-
+        let date: Date;
         let formattedTime: string;
 
-        switch (format) {
-            case TimeFormat.ISO:
-                formattedTime = date.toISOString();
-                break;
-            case TimeFormat.TIMESTAMP:
-                formattedTime = String(date.getTime());
-                break;
-            case TimeFormat.LOCAL:
-                formattedTime = date.toLocaleString();
-                break;
-            case TimeFormat.CUSTOM:
-                if (!pattern) {
-                    throw new Error("Pattern is required for custom format");
-                }
+        if (timestamp && targetTimezone) {
+            if (timezoneWhitelist.indexOf(targetTimezone) === -1) {
+                throw new Error(`Invalid target timezone: ${targetTimezone}`);
+            }
+            date = new Date(timestamp);
+            formattedTime = date.toLocaleString('en-US', { timeZone: targetTimezone });
+        } else {
+            let now = new Date();
 
-                if (pattern.length < 2 || pattern.length > 50) {
-                    throw new Error("Pattern length must be between 2 and 50 characters");
-                }
+            if (timezone && timezoneWhitelist.indexOf(timezone) === -1) {
+                throw new Error(`Invalid timezone: ${timezone}`);
+            }
 
-                const replacements = {
-                    'YYYY': String(date.getFullYear()),
-                    'MM': String(date.getMonth() + 1).padStart(2, '0'),
-                    'DD': String(date.getDate()).padStart(2, '0'),
-                    'HH': String(date.getHours()).padStart(2, '0'),
-                    'mm': String(date.getMinutes()).padStart(2, '0'),
-                    'ss': String(date.getSeconds()).padStart(2, '0'),
-                };
+            date = timezone ? new Date(now.toLocaleString('en-US', { timeZone: timezone })) : now;
 
-                formattedTime = pattern.replace(/(YYYY|MM|DD|HH|mm|ss)/gi, matched => replacements[matched] || matched);
-                break;
-            default:
-                throw new Error(`Invalid format: ${format}`);
+            switch (format) {
+                case TimeFormat.ISO:
+                    formattedTime = date.toISOString();
+                    break;
+                case TimeFormat.TIMESTAMP:
+                    formattedTime = String(date.getTime());
+                    break;
+                case TimeFormat.LOCAL:
+                    formattedTime = date.toLocaleString();
+                    break;
+                case TimeFormat.CUSTOM:
+                    if (!pattern) {
+                        throw new Error("Pattern is required for custom format");
+                    }
+
+                    if (pattern.length < 2 || pattern.length > 50) {
+                        throw new Error("Pattern length must be between 2 and 50 characters");
+                    }
+
+                    const replacements = {
+                        'YYYY': String(date.getFullYear()),
+                        'MM': String(date.getMonth() + 1).padStart(2, '0'),
+                        'DD': String(date.getDate()).padStart(2, '0'),
+                        'HH': String(date.getHours()).padStart(2, '0'),
+                        'mm': String(date.getMinutes()).padStart(2, '0'),
+                        'ss': String(date.getSeconds()).padStart(2, '0'),
+                    };
+
+                    formattedTime = pattern.replace(/(YYYY|MM|DD|HH|mm|ss)/gi, matched => replacements[matched] || matched);
+                    break;
+                case TimeFormat.CONVERT_TIMESTAMP:
+                    if (!timestamp || !targetTimezone) {
+                        throw new Error("Timestamp and targetTimezone are required for convert_timestamp format");
+                    }
+                    if (timezoneWhitelist.indexOf(targetTimezone) === -1) {
+                        throw new Error(`Invalid target timezone: ${targetTimezone}`);
+                    }
+                    date = new Date(timestamp);
+                    formattedTime = date.toLocaleString('en-US', { timeZone: targetTimezone });
+                    break;
+                default:
+                    throw new Error(`Invalid format: ${format}`);
+            }
         }
 
         return {

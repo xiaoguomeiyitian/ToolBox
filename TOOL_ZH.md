@@ -373,6 +373,8 @@
 | format | string | 否 | 要返回的时间格式 | ["iso", "timestamp", "local", "custom"] |
 | pattern | string | 否 | 格式为 custom 时要使用的自定义格式模式。 格式为 custom 时是必需的。 |  |
 | timezone | string | 否 | 要使用的时区。 默认为系统时区。 示例：Asia/Shanghai |  |
+| timestamp | number | 否 | 需要转换的时间戳 |  |
+| targetTimezone | string | 否 | 目标时区（例如：America/New_York） |  |
 
 **输出规范**:
 ```typescript
@@ -628,19 +630,19 @@
 ---
 
 ### image_tool
-**描述**: Compresses images, supporting single files and batch processing of directories.
+**描述**: 压缩图像，支持单个文件和目录的批量处理。
 
-**Input Schema**:
-| Parameter | Type | Required | Description | Enum Values |
+**输入规范**:
+| 参数 | 类型 | 必填 | 描述 | 可选值 |
 |---|---|---|---|---|
-| sourcePath | string | Yes | Absolute path to the source file or directory |  |
-| outputPath | string | No | Absolute path to the output directory (defaults to source directory) |  |
-| quality | number | No | Compression quality (1-100, defaults to 75) |  |
-| resize | object | No | Resize options |  |
-| format | string | No | Output format | jpeg, png, webp, avif, tiff, gif |
-| mode | string | No | Execution mode (sync or async) | sync, async |
-| recursive | boolean | No | Process subdirectories recursively |  |
-| backupDir | string | No | Absolute path to the backup directory (if not specified, no backup) |  |
+| sourcePath | string | 是 | 源文件或目录的绝对路径 |  |
+| outputPath | string | 否 | 输出目录的绝对路径（默认为源目录） |  |
+| quality | number | 否 | 压缩质量（1-100，默认为 75） |  |
+| resize | object | 否 | 调整大小选项 |  |
+| format | string | 否 | 输出格式 | jpeg, png, webp, avif, tiff, gif |
+| mode | string | 否 | 执行模式（同步或异步） | sync, async |
+| recursive | boolean | 否 | 是否递归处理子目录 |  |
+| backupDir | string | 否 | 备份目录的绝对路径（如果未指定，则不备份） |  |
 
 **Output Schema**:
 ```typescript

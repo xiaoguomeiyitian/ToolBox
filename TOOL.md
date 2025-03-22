@@ -373,6 +373,8 @@
 | format | string | No | The format of the time to return | ["iso", "timestamp", "local", "custom"] |
 | pattern | string | No | The custom format pattern to use when format is custom. Required when format is custom. |  |
 | timezone | string | No | The timezone to use. Defaults to the system's timezone. Example: Asia/Shanghai |  |
+| timestamp | number | No | Timestamp to convert |  |
+| targetTimezone | string | No | Target timezone for timestamp conversion (e.g. America/New_York) |  |
 
 **Output Schema**:
 ```typescript
