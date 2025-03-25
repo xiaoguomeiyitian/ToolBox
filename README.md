@@ -9,6 +9,10 @@ An AI-powered automation tool development platform, providing:
 🚀 Enterprise-Grade Capabilities - Integration of production environment services such as MongoDB/Redis/SSH
 🔄 Real-time Updates - Zero-downtime deployment via `buildReload_tool`
 
+<a href="https://glama.ai/mcp/servers/@xiaoguomeiyitian/ToolBox">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@xiaoguomeiyitian/ToolBox/badge" alt="ToolBox Server MCP server" />
+</a>
+
 ```mermaid
 graph LR
     A[Developer] -->|Create| B(Tool Template)
