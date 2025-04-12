@@ -13,10 +13,10 @@
             ],
             "env": {
                 "SSEPORT": "3001",
-                "MONGO_URI": "mongodb://root:123456@127.0.0.1:27017/?authSource=admin&replicaSet=rs0",
-                "REDIS_URI": "redis://:@127.0.0.1:9221/0",
+                "MONGO_URI": "",
+                "REDIS_URI": "",
                 "SSH_server1_URI": "",
-                "GEMINI_API_KEY": "AIzaSyBuZ9J4kqhS1_oPQ6zxm8iZZeV3sTps0qY"
+                "GEMINI_API_KEY": ""
             },
             "args": []
         },
