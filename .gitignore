@@ -4,3 +4,4 @@ build/
 .env*
 test/log
 test/json
+.vscode/launch.json
