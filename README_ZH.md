@@ -124,6 +124,7 @@ npm run watch
     "REDIS_URI": "redis://:password@host:port",
     "SSH_server1_URI": "username:password@host:port",
     "GEMINI_API_KEY":"GEMINI_API_KEY",
+    "SSEPORT": "8080" // 可选：如果设置了此环境变量，服务器将在此端口上使用 SSE 协议。否则，默认使用 Stdio 协议。
   },
   "disabled": false,
   "autoApprove": []

@@ -128,6 +128,7 @@ To integrate with the Claude Desktop application, add the following server confi
     "REDIS_URI": "redis://:password@host:port",
     "SSH_server1_URI": "username:password@host:port",
     "GEMINI_API_KEY":"GEMINI_API_KEY",
+    "SSEPORT": "8080" // Optional: If set, the server will use SSE transport on this port. Otherwise, it defaults to Stdio transport.
   },
   "disabled": false,
   "autoApprove": []

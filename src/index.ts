@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-
+import express, { Request, Response } from "express";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -62,18 +63,12 @@ function setupGracefulShutdown(transport: StdioServerTransport) {
 /**创建一个 MCP 服务器*/
 async function main() {
   console.log('Starting ToolBox server...');
-  let transport: StdioServerTransport | null = null;
-
   try {
-    // 预加载工具
+    // 加载所有工具
     console.log('Loading tools...');
     await loadTools();
-
-    const server = new Server(
-      { name: "ToolBox", version: "0.1.0" },
-      { capabilities: { resources: {}, tools: {}, prompts: {} } }
-    );
-
+    //创建服务器
+    const server = new Server({ name: "ToolBox", version: "0.1.0" }, { capabilities: { resources: {}, tools: {}, prompts: {} } });
     // 设置请求处理程序
     server.setRequestHandler(ListResourcesRequestSchema, listResourcesHandler);
     server.setRequestHandler(ReadResourceRequestSchema, readResourceHandler);
@@ -82,16 +77,39 @@ async function main() {
     server.setRequestHandler(ListPromptsRequestSchema, listPromptsHandler);
     server.setRequestHandler(GetPromptRequestSchema, getPromptHandler);
 
-    // 启动服务器
-    console.log('Connecting to transport...');
-    transport = new StdioServerTransport();
-
-    // 设置优雅退出
-    setupGracefulShutdown(transport);
-
-    await server.connect(transport);
-
-    console.log('ToolBox server started successfully');
+    const seeProt = Number(process.env.SSEPORT);
+    if (!isNaN(seeProt)) {
+      const app = express();
+      // 为了支持多个同时连接，我们使用一个查找对象，
+      const transports: { [sessionId: string]: SSEServerTransport } = {};
+      app.get("/sse", async (_: Request, res: Response) => {
+        const sseTransport = new SSEServerTransport('/messages', res);
+        transports[sseTransport.sessionId] = sseTransport;
+        res.on("close", () => {
+          delete transports[sseTransport.sessionId];
+        });
+        await server.connect(sseTransport);
+      });
+      app.post("/messages", async (req: Request, res: Response) => {
+        const sessionId = req.query.sessionId as string;
+        const sseTransport = transports[sessionId];
+        if (sseTransport) {
+          await sseTransport.handlePostMessage(req, res);
+        } else {
+          res.status(400).send('No transport found for sessionId');
+        }
+      });
+      app.listen(seeProt);
+      console.log(`SSE server listening on http://localhost:${seeProt}/sse`);
+    } else {
+      // 启动服务器
+      console.log('Connecting to transport...');
+      const transport = new StdioServerTransport();
+      // 设置优雅退出
+      setupGracefulShutdown(transport);
+      await server.connect(transport);
+      console.log('ToolBox server started successfully');
+    }
 
     // 记录启动日志
     LogService.log({
@@ -115,7 +133,4 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error("Server error:", error);
-  process.exit(1);
-});
+main()

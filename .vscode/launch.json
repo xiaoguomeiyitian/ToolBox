@@ -3,11 +3,30 @@
     "configurations": [
         {
             "type": "node",
+            "name": "sseMCP",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/index.js",
+            "cwd": "${workspaceFolder}/build",
+            "console": "internalConsole",
+            "runtimeArgs": [
+                "--inspect"
+            ],
+            "env": {
+                "SSEPORT": "3001",
+                "MONGO_URI": "mongodb://root:123456@127.0.0.1:27017/?authSource=admin&replicaSet=rs0",
+                "REDIS_URI": "redis://:@127.0.0.1:9221/0",
+                "SSH_server1_URI": "",
+                "GEMINI_API_KEY": "AIzaSyBuZ9J4kqhS1_oPQ6zxm8iZZeV3sTps0qY"
+            },
+            "args": []
+        },
+        {
+            "type": "node",
             "request": "attach",
             "name": "attach",
             "address": "localhost",
             "port": 9229,
-            "localRoot": "${workspaceFolder}"
+            "localRoot": "${workspaceFolder}",
         }
     ]
 }

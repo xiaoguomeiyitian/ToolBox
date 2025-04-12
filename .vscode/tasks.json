@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "build_dev",
+        "restart_debug"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "build_dev",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "build_dev"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "never",
+        "panel": "shared"
+      },
+    },
+    {
+      "label": "restart_debug",
+      "type": "shell",
+      "command": "${command:workbench.action.debug.restart}"
+    },
+  ]
+}
