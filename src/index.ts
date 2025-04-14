@@ -19,27 +19,27 @@ import { LogService } from "./logService.js";
 // 处理未捕获的异常
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
-  LogService.log({
-    ts: new Date().toISOString(),
-    tool: 'system',
-    args: {},
-    stat: 'error',
-    err: error.message,
-    trace: error.stack,
-  });
+  // LogService.log({
+  //   ts: new Date().toISOString(),
+  //   tool: 'system',
+  //   args: {},
+  //   stat: 'error',
+  //   err: error.message,
+  //   trace: error.stack,
+  // });
 });
 
 // 处理未处理的Promise拒绝
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  LogService.log({
-    ts: new Date().toISOString(),
-    tool: 'system',
-    args: {},
-    stat: 'error',
-    err: reason instanceof Error ? reason.message : String(reason),
-    trace: reason instanceof Error ? reason.stack : undefined,
-  });
+  // LogService.log({
+  //   ts: new Date().toISOString(),
+  //   tool: 'system',
+  //   args: {},
+  //   stat: 'error',
+  //   err: reason instanceof Error ? reason.message : String(reason),
+  //   trace: reason instanceof Error ? reason.stack : undefined,
+  // });
 });
 
 // 优雅退出
