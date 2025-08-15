@@ -46,7 +46,7 @@ export default async (request: any) => {
                         text: JSON.stringify({
                             error: "Invalid JSON format for the 'args' parameter",
                             hint: "'args' should be a valid JSON array string. For example: '[\"key\", \"value\"]'"
-                        }),
+                        }, null, 2),
                     },
                 ],
                 isError: true,

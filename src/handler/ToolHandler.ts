@@ -177,7 +177,7 @@ export const callToolHandler = async (request: ToolRequest, caller: string) => {
       content: [
         {
           type: "text",
-          text: JSON.stringify(error.message),
+          text: JSON.stringify(error.message, null, 2),
         },
       ],
       isError: true,

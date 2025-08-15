@@ -46,7 +46,7 @@ export default async (request: any) => {
                     text: JSON.stringify({
                         message: `Created note ${id}: ${title}`,
                         id: id
-                    }),
+                    }, null, 2),
                 },
             ],
         };

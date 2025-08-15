@@ -100,7 +100,7 @@ export default async (request: any) => {
                     operation: `${action} completed`,
                     source: sourcePath,
                     destination: destinationPath
-                })
+                }, null, 2)
             }]
         };
 
@@ -111,7 +111,7 @@ export default async (request: any) => {
                 text: JSON.stringify({
                     error: error.message,
                     stack: error.stack
-                })
+                }, null, 2)
             }],
             isError: true
         };
