@@ -1,4 +1,4 @@
-import { schema as toolSchema, default as toolHandler } from '../../src/tools/create_note';
+import { default as toolHandler } from '../../src/tools/create_note';
 import { describe, test, expect } from 'vitest';
 
 describe('create_note 测试套件', () => {

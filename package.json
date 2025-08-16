@@ -37,7 +37,8 @@
     "watch": "tsc --watch",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js",
     "test": "vitest run",
-    "build_dev": "npm run build"
+    "build_copy": "util copy ./.env ./build/.env",
+    "build_dev": "tsc --build --diagnostics && npm run build_copy"
   },
   "devDependencies": {
     "@types/archiver": "^6.0.3",
@@ -49,6 +50,7 @@
     "vitest": "^3.0.8"
   },
   "dependencies": {
+    "@xiaoguomeiyitian/utils": "^0.1.2",
     "@google/generative-ai": "^0.24.1",
     "@modelcontextprotocol/sdk": "^1.17.3",
     "archiver": "^7.0.1",

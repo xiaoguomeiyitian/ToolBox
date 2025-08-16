@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import dotenv from 'dotenv';
 import express from "express";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -18,6 +19,7 @@ import { LogService } from "./logService.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { randomUUID } from "crypto";
 
+dotenv.config(); //加载环境变量文件
 // 处理未捕获的异常
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);

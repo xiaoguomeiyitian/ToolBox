@@ -1,6 +1,5 @@
-import { schema as toolSchema, default as toolHandler } from '../../src/tools/redis_tool';
+import { default as toolHandler } from '../../src/tools/redis_tool';
 import { describe, test, expect, vi } from 'vitest';
-import { Redis } from 'ioredis';
 
 // Mock Redis dependencies
 vi.mock('ioredis', async () => {

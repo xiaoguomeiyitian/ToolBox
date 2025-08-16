@@ -1,4 +1,4 @@
-import { schema as toolSchema, default as toolHandler } from '../../src/tools/schedule_tool';
+import { default as toolHandler } from '../../src/tools/schedule_tool';
 import { describe, test, expect, vi } from 'vitest';
 
 describe('schedule_tool 测试套件', () => {

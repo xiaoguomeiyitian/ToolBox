@@ -1,4 +1,4 @@
-import { schema as toolSchema, default as toolHandler } from '../../src/tools/time_tool';
+import { default as toolHandler } from '../../src/tools/time_tool';
 import { describe, test, expect } from 'vitest';
 
 describe('time_tool 测试套件', () => {
