@@ -8,8 +8,8 @@ const readdir = promisify(fs.readdir);
 const mkdir = promisify(fs.mkdir);
 
 export const schema = {
-  name: "img_tool",
-  description: "Compress images, batch process files/dirs.",
+  name: "image_tool",
+  description: "A powerful image processing tool that supports format conversion, resizing, quality compression, and can batch process directories.",
   type: "object",
   properties: {
     sourcePath: {
@@ -18,14 +18,21 @@ export const schema = {
     },
     outputPath: {
       type: "string",
-      description: "Output directory path (defaults to source)"
+      description: "Output directory path. Defaults to a new file (e.g., 'source.processed.jpg') or a new directory (e.g., 'source_processed')."
     },
     quality: {
       type: "number",
-      description: "Compression quality (1-100, defaults to 75)",
+      description: "Compression quality for JPEG/WebP/AVIF/TIFF (1-100, defaults to 80)",
       minimum: 1,
       maximum: 100,
-      default: 75
+      default: 80
+    },
+    compressionLevel: {
+        type: "number",
+        description: "PNG compression level (0-9, defaults to 6)",
+        minimum: 0,
+        maximum: 9,
+        default: 6
     },
     resize: {
       type: "object",
@@ -44,13 +51,7 @@ export const schema = {
     format: {
       type: "string",
       enum: ["jpeg", "png", "webp", "avif", "tiff", "gif"],
-      description: "Output format"
-    },
-    mode: {
-      type: "string",
-      enum: ["sync", "async"],
-      description: "Execution mode (sync or async)",
-      default: "sync"
+      description: "Output format (optional, keeps original if not specified)"
     },
     recursive: {
       type: "boolean",
@@ -68,7 +69,7 @@ export const schema = {
 async function processImage(inputPath: string, outputPath: string, options: any) {
   let tempFilePath: string | null = null;
   try {
-    const { quality, resize, format, backupDir } = options;
+    const { quality, compressionLevel, resize, format, backupDir } = options;
 
     if (backupDir) {
       const backupPath = path.join(backupDir, path.basename(inputPath));
@@ -81,22 +82,35 @@ async function processImage(inputPath: string, outputPath: string, options: any)
     if (resize) {
       sharpImage = sharpImage.resize(resize.width, resize.height);
     }
+    
+    const targetFormat = format || path.extname(inputPath).substring(1);
 
-    if (format === 'jpeg') {
-      sharpImage = sharpImage.jpeg({ quality: quality || 75 });
-    } else if (format === 'png') {
-      sharpImage = sharpImage.png({ quality: quality || 75 });
-    } else if (format === 'webp') {
-      sharpImage = sharpImage.webp({ quality: quality || 75 });
-    } else if (format === 'avif') {
-      sharpImage = sharpImage.avif({ quality: quality || 75 });
-    } else if (format === 'tiff') {
-      sharpImage = sharpImage.tiff({ quality: quality || 75 });
-    } else if (format === 'gif') {
-      sharpImage = sharpImage.gif();
+    switch (targetFormat) {
+        case 'jpeg':
+            sharpImage = sharpImage.jpeg({ quality: quality || 80 });
+            break;
+        case 'png':
+            sharpImage = sharpImage.png({ compressionLevel: compressionLevel || 6 });
+            break;
+        case 'webp':
+            sharpImage = sharpImage.webp({ quality: quality || 80 });
+            break;
+        case 'avif':
+            sharpImage = sharpImage.avif({ quality: quality || 80 });
+            break;
+        case 'tiff':
+            sharpImage = sharpImage.tiff({ quality: quality || 80 });
+            break;
+        case 'gif':
+            sharpImage = sharpImage.gif();
+            break;
     }
 
+    // Ensure output directory exists
+    await mkdir(path.dirname(outputPath), { recursive: true });
+
     if (inputPath === outputPath) {
+      // This case should be avoided by the new default path logic, but kept for safety
       tempFilePath = path.join(path.dirname(inputPath), `temp_${path.basename(inputPath)}`);
       await sharpImage.toFile(tempFilePath);
       fs.renameSync(tempFilePath, inputPath);
@@ -107,16 +121,17 @@ async function processImage(inputPath: string, outputPath: string, options: any)
     return { success: true, input: inputPath, output: outputPath };
   } catch (error) {
     console.error(`Error processing image ${inputPath}:`, error);
-    if (tempFilePath) {
+    if (tempFilePath && fs.existsSync(tempFilePath)) {
       fs.unlinkSync(tempFilePath);
     }
-    return { success: false, input: inputPath, error: error.message };
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { success: false, input: inputPath, error: errorMessage };
   }
 }
 
 async function processDirectory(sourcePath: string, outputPath: string, options: any) {
   try {
-    const { recursive, backupDir } = options;
+    const { recursive, backupDir, format } = options;
     await mkdir(outputPath, { recursive: true });
     const files = await readdir(sourcePath);
 
@@ -126,7 +141,8 @@ async function processDirectory(sourcePath: string, outputPath: string, options:
       const fileStat = await stat(filePath);
 
       if (fileStat.isFile() && /\.(jpg|jpeg|png|webp|avif|tiff|gif)$/i.test(file)) {
-        const outputFileName = path.basename(file);
+        const parsedPath = path.parse(file);
+        const outputFileName = format ? `${parsedPath.name}.${format}` : file;
         const outputFilePath = path.join(outputPath, outputFileName);
 
         if (backupDir) {
@@ -146,24 +162,31 @@ async function processDirectory(sourcePath: string, outputPath: string, options:
     return results;
   } catch (error) {
     console.error(`Error processing directory ${sourcePath}:`, error);
-    return [{ success: false, input: sourcePath, error: error.message }];
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return [{ success: false, input: sourcePath, error: errorMessage }];
   }
 }
 
 export default async function (request: any) {
   try {
-    const { sourcePath, outputPath: userOutputPath, quality, resize, format, mode, recursive, backupDir } = request.params.arguments;
+    const { sourcePath, outputPath: userOutputPath, quality, compressionLevel, resize, format, recursive, backupDir } = request.params.arguments;
 
     const sourcePathStat = await stat(sourcePath);
 
-    let outputPath = userOutputPath;
-    if (!outputPath) {
-      outputPath = sourcePathStat.isFile() ?
-        sourcePath :
-        path.join(path.dirname(sourcePath), path.basename(sourcePath));
+    let outputPath;
+    if (userOutputPath) {
+        outputPath = userOutputPath;
+    } else {
+        if (sourcePathStat.isFile()) {
+            const parsedPath = path.parse(sourcePath);
+            const outputFormat = format || parsedPath.ext.slice(1);
+            outputPath = path.join(parsedPath.dir, `${parsedPath.name}.processed.${outputFormat}`);
+        } else { // is directory
+            outputPath = `${sourcePath}_processed`;
+        }
     }
 
-    const options = { quality, resize, format, recursive, backupDir };
+    const options = { quality, compressionLevel, resize, format, recursive, backupDir };
 
     let results;
     if (sourcePathStat.isFile()) {

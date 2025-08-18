@@ -31,6 +31,21 @@ node ./build/index.js --health-check
 }
 ```
 
+对于配置 `streamableHttp` 类型的MCP服务器，请在Cline插件中按如下方式配置当前MCP服务器：
+```json
+{
+  "mcpServers": {
+    "ToolBox": {
+      "autoApprove": [ ],
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
+      "url": " http://localhost:3001/mcp"
+    }
+  }
+}
+```
+
 ## 安装验证
 ```bash
 # 检查服务状态

@@ -3,242 +3,181 @@ import sqlite3 from 'sqlite3';
 import fs from 'fs';
 import { sqlitePath } from '../config.js';
 
-// 工具参数schema
 export const schema = {
   name: "sqlite_tool",
-  description: "Perform SQLite database operations",
+  description: "执行SQLite数据库操作，包括查询、事务、备份和索引管理。",
   type: "object",
   properties: {
     action: {
       type: "string",
       enum: ["query", "transaction", "backup", "optimize", "index", "drop_index", "list_indexes", "table_info", "foreign_key_check", "integrity_check"],
-      description: "Operation type"
+      description: "要执行的操作类型"
     },
     dbName: {
       type: "string",
-      description: "Database file name (without extension)"
+      description: "数据库文件名 (不含扩展名)"
     },
     query: {
       type: "string",
-      description: "SQL query to execute"
+      description: "要执行的SQL查询语句"
     },
     params: {
       type: "array",
-      description: "SQL query parameters"
+      description: "SQL查询的参数"
     },
     backupName: {
       type: "string",
-      description: "Backup file name (without extension)"
-    },
-    pagination: {
-      type: "object",
-      description: "Pagination settings",
-      properties: {
-        page: {
-          type: "number",
-          minimum: 1,
-          default: 1,
-          description: "Page number"
-        },
-        pageSize: {
-          type: "number",
-          minimum: 1,
-          maximum: 1000,
-          default: 50,
-          description: "Items per page"
-        },
-        countTotal: {
-          type: "boolean",
-          default: false,
-          description: "Count total items"
-        }
-      }
+      description: "备份文件名 (不含扩展名)"
     },
     tableName: {
       type: "string",
-      description: "Table name"
+      description: "表名"
     },
     indexName: {
       type: "string",
-      description: "Index name"
+      description: "索引名"
     }
   },
   required: ["action", "dbName"]
 };
 
-// 连接池
 const connectionPool = new Map<string, any>();
 
-// 获取数据库连接
-async function getDatabaseConnection(dbName: string) {
-  const dbPath = path.join(sqlitePath, `${dbName}.db`);
-  if (connectionPool.has(dbPath)) {
-    return connectionPool.get(dbPath);
-  }
-
-  const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      console.error("数据库连接失败", err);
-    } else {
-      console.log("数据库连接成功");
+function getDatabaseConnection(dbName: string): Promise<sqlite3.Database> {
+  return new Promise((resolve, reject) => {
+    const dbPath = path.join(sqlitePath, `${dbName}.db`);
+    if (connectionPool.has(dbPath)) {
+      resolve(connectionPool.get(dbPath));
+      return;
     }
+
+    const db = new sqlite3.Database(dbPath, (err) => {
+      if (err) {
+        reject(new Error(`数据库连接失败: ${err.message}`));
+      } else {
+        connectionPool.set(dbPath, db);
+        resolve(db);
+      }
+    });
   });
-  connectionPool.set(dbPath, db);
-  return db;
 }
 
-// 工具实现
-export default async function(request: any) {
-  try {
-    const { action, dbName, query, params, backupName, pagination, tableName, indexName } = request.params.arguments;
-    const db = await getDatabaseConnection(dbName);
+function closeDatabaseConnection(dbName: string): Promise<void> {
+  return new Promise((resolve) => {
+    const dbPath = path.join(sqlitePath, `${dbName}.db`);
+    if (connectionPool.has(dbPath)) {
+      const db = connectionPool.get(dbPath);
+      db.close(() => {
+        connectionPool.delete(dbPath);
+        resolve();
+      });
+    } else {
+      resolve();
+    }
+  });
+}
 
-    const executeQuery = (sql: string, params?: any[]) => {
+export default async function(request: any) {
+  let db: sqlite3.Database | null = null;
+  try {
+    const { action, dbName, query, params, backupName, tableName, indexName } = request.params.arguments;
+    db = await getDatabaseConnection(dbName);
+
+    const executeQuery = (sql: string, queryParams?: any[]): Promise<any> => {
       return new Promise((resolve, reject) => {
-        db.all(sql, params, (err, rows) => {
+        db!.all(sql, queryParams, (err, rows) => {
           if (err) {
-            reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
+            reject(err);
           } else {
-            const result = rows ? JSON.stringify(rows, null, 2) : JSON.stringify('Success', null, 2);
-            resolve({ content: [{ type: "text", text: result }], isError: false });
+            resolve({ content: [{ type: "text", text: JSON.stringify(rows || 'Success', null, 2) }] });
           }
         });
       });
     };
 
+    const executeRun = (sql: string, runParams?: any[]): Promise<any> => {
+        return new Promise((resolve, reject) => {
+            db!.run(sql, runParams, function(err) { // Use function() to get `this` context
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ content: [{ type: "text", text: JSON.stringify({ lastID: this.lastID, changes: this.changes }, null, 2) }] });
+                }
+            });
+        });
+    };
+
     switch (action) {
       case "query":
-        if (!query) {
-          throw new Error("查询语句不能为空");
-        }
-        return executeQuery(query, params);
+        if (!query) throw new Error("参数 'query' 不能为空。");
+        return await executeQuery(query, params);
+
       case "transaction":
-        if (!query) {
-          throw new Error("事务语句不能为空");
+        if (!query) throw new Error("参数 'query' 不能为空。");
+        await executeRun("BEGIN TRANSACTION");
+        try {
+          const result = await executeRun(query, params);
+          await executeRun("COMMIT");
+          return result;
+        } catch (err) {
+          await executeRun("ROLLBACK");
+          throw err; // Re-throw to be caught by the main catch block
         }
-        return new Promise((resolve, reject) => {
-          db.serialize(() => {
-            db.run("BEGIN TRANSACTION");
-            db.run(query, params, (err) => {
-              if (err) {
-                db.run("ROLLBACK");
-                reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
-              } else {
-                db.run("COMMIT", (err) => {
-                  if (err) {
-                    db.run("ROLLBACK");
-                    reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
-                  } else {
-                    resolve({ content: [{ type: "text", text: JSON.stringify(`Transaction completed successfully in database ${dbName}`, null, 2) }], isError: false });
-                  }
-                });
-              }
-            });
-          });
-        });
+
       case "backup":
-        if (!backupName) {
-          throw new Error("备份名称不能为空");
-        }
-        return new Promise((resolve, reject) => {
-          const dbPath = path.join(sqlitePath, `${dbName}.db`);
-          const backupPath = path.join(sqlitePath, `${backupName}.db`);
-          fs.copyFile(dbPath, backupPath, (err) => {
-            if (err) {
-              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
-            } else {
-              resolve({ content: [{ type: "text", text: JSON.stringify(`Database ${dbName} backed up to ${backupName}.db`, null, 2) }], isError: false });
-            }
-          });
-        });
+        if (!backupName) throw new Error("参数 'backupName' 不能为空。");
+        const dbPath = path.join(sqlitePath, `${dbName}.db`);
+        const backupPath = path.join(sqlitePath, `${backupName}.db`);
+        await fs.promises.copyFile(dbPath, backupPath);
+        return { content: [{ type: "text", text: `数据库 ${dbName} 已成功备份至 ${backupName}.db` }] };
+
       case "optimize":
-        return new Promise((resolve, reject) => {
-          db.run("VACUUM", (err) => {
-            if (err) {
-              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
-            } else {
-              resolve({ content: [{ type: "text", text: JSON.stringify(`Database ${dbName} optimized`, null, 2) }], isError: false });
-            }
-          });
-        });
+        return await executeRun("VACUUM");
+
       case "index":
-        if (!query) {
-          throw new Error("索引语句不能为空");
-        }
-        return new Promise((resolve, reject) => {
-          db.run(query, (err) => {
-            if (err) {
-              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
-            } else {
-              resolve({ content: [{ type: "text", text: JSON.stringify(`Index created successfully for database ${dbName}`, null, 2) }], isError: false });
-            }
-          });
-        });
+        if (!query) throw new Error("参数 'query' 不能为空。");
+        return await executeRun(query);
+
       case "drop_index":
-        if (!indexName) {
-          throw new Error("索引名称不能为空");
-        }
-        return new Promise((resolve, reject) => {
-          db.run(`DROP INDEX IF EXISTS ${indexName}`, (err) => {
-            if (err) {
-              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
-            } else {
-              resolve({ content: [{ type: "text", text: JSON.stringify(`Index ${indexName} dropped successfully from database ${dbName}`, null, 2) }], isError: false });
-            }
-          });
-        });
-       case "list_indexes":
-        if (!tableName) {
-          throw new Error("表名称不能为空");
-        }
-        return new Promise((resolve, reject) => {
-          db.all(`PRAGMA index_list(${tableName})`, (err, rows) => {
-            if (err) {
-              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
-            } else {
-              const formattedRows = rows.map(row => ({ name: row.name, table: tableName, unique: row.unique }));
-              const result = JSON.stringify(formattedRows, null, 2);
-              resolve({ content: [{ type: "text", text: result }], isError: false });
-            }
-          });
-        });
+        if (!indexName) throw new Error("参数 'indexName' 不能为空。");
+        // Sanitize indexName to prevent SQL injection
+        const sanitizedIndexName = indexName.replace(/[^a-zA-Z0-9_]/g, '');
+        return await executeRun(`DROP INDEX IF EXISTS ${sanitizedIndexName}`);
+
+      case "list_indexes":
+        if (!tableName) throw new Error("参数 'tableName' 不能为空。");
+        return await executeQuery(`PRAGMA index_list(${tableName})`);
+
       case "table_info":
-        if (!tableName) {
-          throw new Error("表名称不能为空");
-        }
-        return new Promise((resolve, reject) => {
-          db.all(`PRAGMA table_info(${tableName})`, (err, rows) => {
-            if (err) {
-              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
-            } else {
-              resolve({ content: [{ type: "text", text: JSON.stringify(rows, null, 2) }], isError: false });
-            }
-          });
-        });
+        if (!tableName) throw new Error("参数 'tableName' 不能为空。");
+        return await executeQuery(`PRAGMA table_info(${tableName})`);
+
       case "foreign_key_check":
-        return new Promise((resolve, reject) => {
-          db.all(`PRAGMA foreign_key_check`, (err, rows) => {
-            if (err) {
-              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
-            } else {
-              resolve({ content: [{ type: "text", text: JSON.stringify(rows, null, 2) }], isError: false });
-            }
-          });
-        });
+        return await executeQuery(`PRAGMA foreign_key_check`);
+
       case "integrity_check":
-        return new Promise((resolve, reject) => {
-          db.all(`PRAGMA integrity_check`, (err, rows) => {
-            if (err) {
-              reject({ content: [{ type: "text", text: JSON.stringify(`Error: ${err.message}`, null, 2) }], isError: true });
-            } else {
-              resolve({ content: [{ type: "text", text: JSON.stringify(`Integrity check passed for database ${dbName}`, null, 2) }], isError: false });
-            }
-          });
-        });
+        return await executeQuery(`PRAGMA integrity_check`);
+
       default:
         throw new Error(`不支持的操作类型: ${action}`);
     }
   } catch (error) {
-    return { content: [{ type: "text", text: JSON.stringify(`Error: ${error instanceof Error ? error.message : String(error)}`, null, 2) }], isError: true };
+    return {
+      content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+      isError: true
+    };
+  } finally {
+    if (db && request.params.arguments.dbName) {
+      await closeDatabaseConnection(request.params.arguments.dbName);
+    }
   }
+}
+
+export async function destroy() {
+  const allConnections = Array.from(connectionPool.keys());
+  for (const dbPath of allConnections) {
+    const dbName = path.basename(dbPath, '.db');
+    await closeDatabaseConnection(dbName);
+  }
+  console.log("Destroy sqlite_tool: All connections closed.");
 }

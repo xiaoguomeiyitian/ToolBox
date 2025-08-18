@@ -96,7 +96,7 @@ async function getSSHConnection(serverName: string): Promise<Client> {
  * @param command 要执行的命令
  * @returns 命令执行结果
  */
-async function executeCommand(conn: Client, command: string): Promise<string> {
+async function executeCommand(conn: Client, command: string): Promise<{ stdout: string, stderr: string, code: number | null, signal: any }> {
     return new Promise((resolve, reject) => {
         conn.exec(command, (err, stream) => {
             if (err) {
@@ -104,22 +104,19 @@ async function executeCommand(conn: Client, command: string): Promise<string> {
                 return;
             }
             
-            let output = '';
-            let errorOutput = '';
+            let stdout = '';
+            let stderr = '';
             
             stream.on('close', (code, signal) => {
-                // 如果有错误输出，但命令仍然成功执行，我们仍然返回完整输出
-                resolve(output);
+                resolve({ stdout, stderr, code, signal });
             });
             
             stream.on('data', (data) => {
-                output += data.toString();
+                stdout += data.toString();
             });
             
             stream.stderr.on('data', (data) => {
-                const errorData = data.toString();
-                errorOutput += errorData;
-                output += 'ERROR: ' + errorData;
+                stderr += data.toString();
             });
             
             stream.on('error', (err) => {
@@ -151,9 +148,9 @@ export default async (request: any) => {
                 {
                     type: "text",
                     text: JSON.stringify({
-                        output: result,
                         server: serverName,
-                        command: command
+                        command: command,
+                        ...result
                     }, null, 2)
                 }
             ]

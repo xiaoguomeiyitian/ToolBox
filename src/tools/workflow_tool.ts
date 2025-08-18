@@ -9,10 +9,15 @@ export const schema = {
   description: "Orchestrate tools in serial/parallel workflows",
   type: "object",
   properties: {
-    version: { 
-      type: "string", 
+    version: {
+      type: "string",
       default: "1.0",
-      description: "Workflow definition version (e.g., '1.0.1')" 
+      description: "Workflow definition version (e.g., '1.0.1')"
+    },
+    parallel: {
+      type: "boolean",
+      default: false,
+      description: "If true, executes all steps in parallel."
     },
     steps: {
       type: "array",
@@ -21,27 +26,22 @@ export const schema = {
         type: "object",
         description: "Step configuration (tool, args, retry)",
         properties: {
-          tool: { 
+          tool: {
             type: "string",
-            description: "Tool name (e.g., 'sftp_tool')" 
+            description: "Tool name (e.g., 'sftp_tool')"
           },
-          args: { 
+          args: {
             type: "object",
-            description: "Tool parameters (e.g., {action:'upload'})" 
+            description: "Tool parameters (e.g., {action:'upload'})"
           },
-          retry: { 
-            type: "number", 
-            default: 0,
-            description: "Number of retries" 
-          },
-          timeout: { 
+          retry: {
             type: "number",
-            description: "Timeout (ms)" 
+            default: 0,
+            description: "Number of retries"
           },
-          parallel: { 
-            type: "boolean", 
-            default: false,
-            description: "Execute in parallel" 
+          timeout: {
+            type: "number",
+            description: "Timeout (ms)"
           },
           compensation: {
             type: "object",
@@ -65,10 +65,10 @@ export const schema = {
 function getOutputPath(outputFile?: string) {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const defaultPath = path.join(logDirectory, `workflow_${timestamp}.json`);
-  
+
   if (!outputFile) return defaultPath;
-  
-  return path.isAbsolute(outputFile) 
+
+  return path.isAbsolute(outputFile)
     ? outputFile
     : path.resolve(logDirectory, outputFile);
 }
@@ -83,13 +83,13 @@ async function saveReport(report: any, outputPath: string) {
 }
 
 // Implement tool logic
-export default async function(request: any) {
-  const steps = request.params.arguments.steps;
-  const stepDetails = [];
+export default async function (request: any) {
+  const { steps, outputFile, parallel = false } = request.params.arguments;
+  let stepDetails: any[] = [];
   let workflowStatus = "success";
   const startTime = new Date().toISOString();
   let executionTime = 0;
-  const outputPath = getOutputPath(request.params.arguments.outputFile);
+  const outputPath = getOutputPath(outputFile);
 
   // Check for restricted tools
   const restrictedTools = ["buildReload_tool", "workflow_tool"];
@@ -108,28 +108,39 @@ export default async function(request: any) {
   }
 
   try {
-    for (const [index, step] of steps.entries()) {
-      const stepResult = await executeStep(step, index);
-      stepDetails.push(stepResult);
-      if (stepResult.status === "failed") {
+    if (parallel) {
+      // Parallel execution
+      const promises = steps.map((step, index) => executeStep(step, index));
+      const results = await Promise.all(promises);
+      stepDetails = results;
+      if (results.some(r => r.status === "failed")) {
         workflowStatus = "failed";
+      }
+    } else {
+      // Serial execution
+      for (const [index, step] of steps.entries()) {
+        const stepResult = await executeStep(step, index);
+        stepDetails.push(stepResult);
+        if (stepResult.status === "failed") {
+          workflowStatus = "failed";
+          // In serial execution, we could choose to break here.
+          // For now, we continue to allow compensation on later steps if needed.
+        }
       }
     }
 
     executionTime = new Date().getTime() - new Date(startTime).getTime();
 
-    const report = { workflowStatus, executionTime, steps: stepDetails };
+    // Sort by index for consistent reports, especially after parallel execution
+    const sortedStepDetails = stepDetails.sort((a, b) => a.index - b.index);
+    const report = { workflowStatus, executionTime, steps: sortedStepDetails };
     await saveReport(report, outputPath);
 
     return {
       content: [
         {
           type: "text",
-          text: JSON.stringify({
-            workflowStatus: workflowStatus,
-            executionTime: executionTime,
-            steps: stepDetails
-          }, null, 2)
+          text: JSON.stringify(report, null, 2)
         }
       ]
     };
@@ -137,15 +148,14 @@ export default async function(request: any) {
     console.error("Workflow failed:", error);
     workflowStatus = "failed";
     executionTime = new Date().getTime() - new Date(startTime).getTime();
+    const finalReport = { workflowStatus, executionTime, error: error instanceof Error ? error.message : String(error), steps: stepDetails };
+    await saveReport(finalReport, outputPath);
 
     return {
       content: [
         {
           type: "text",
-          text: JSON.stringify(`Workflow failed: ${error instanceof Error ? error.message : String(error)}`, null, 2),
-          workflowStatus: workflowStatus,
-          executionTime: executionTime,
-          steps: stepDetails
+          text: JSON.stringify(finalReport, null, 2)
         }
       ],
       isError: true
@@ -153,7 +163,7 @@ export default async function(request: any) {
   }
 }
 
-async function executeStep(step, index) {
+async function executeStep(step: any, index: number) {
   const startTime = new Date().toISOString();
   let duration = 0;
   let result = null;

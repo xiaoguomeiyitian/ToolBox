@@ -1,75 +1,80 @@
-import { spawn } from 'child_process';
+import { spawn, SpawnOptions } from 'child_process';
 import { platform } from 'os';
-import fs from 'fs';
-import { cliLogFile } from '../config.js';
-
 
 export const schema = {
   name: "cli_tool",
-  description: "CLI executor with sync/async modes and timeout.",
+  description: "执行CLI命令，支持同步/异步模式、超时和安全过滤。",
   type: "object",
   properties: {
-    command: { type: "string", description: "Single-line command content" },
+    command: { type: "string", description: "要执行的单行命令" },
     commands: {
       type: "array",
       items: { type: "string" },
-      description: "Multi-line command sequence (mutually exclusive with 'command')"
+      description: "要执行的多行命令序列 (与 'command' 互斥)"
     },
     mode: {
       type: "string",
       enum: ["sync", "async"],
       default: "sync",
-      description: "Execution mode: sync - synchronous blocking, async - asynchronous non-blocking"
+      description: "执行模式: sync (同步阻塞), async (异步非阻塞)"
     },
     timeout: {
       type: "number",
       minimum: 1,
-      default: 30,
-      description: "Command timeout in seconds"
+      default: 60,
+      description: "命令执行的超时时间（秒）"
     },
     cwd: {
       type: "string",
-      description: "Working directory (absolute or relative to build/)"
+      description: "命令执行的工作目录 (绝对路径)"
     },
     platform: {
       type: "string",
       enum: ["auto", "win32", "linux", "darwin"],
       default: "auto",
-      description: "Force execution context (win32, linux)"
+      description: "强制指定执行命令的操作系统环境"
     },
     safe_mode: {
       type: "boolean",
       default: true,
-      description: "Enable dangerous command filtering"
+      description: "是否启用危险命令过滤"
     }
   },
   required: []
 };
 
-const dangerousCommands = [
-  'rm -rf /',
-  'chmod 777 /*'
+const dangerousCommandPatterns = [
+  /^sudo\s+rm\s+-rf\s+\//,
+  /^\s*rm\s+-rf\s+\//,
+  /^sudo\s+chmod\s+(777|-R\s+777)\s+\//,
 ];
 
-async function executeCommand(command: string, options: any): Promise<{ stdout: string; stderr: string; code: number }> {
+function isCommandDangerous(command: string): boolean {
+  return dangerousCommandPatterns.some(pattern => pattern.test(command));
+}
+
+async function executeCommand(command: string, options: any): Promise<{ stdout: string; stderr: string; code: number | null }> {
   return new Promise((resolve, reject) => {
     const shell = options.platform === 'win32' ? 'cmd.exe' : '/bin/bash';
     const shellArg = options.platform === 'win32' ? '/c' : '-c';
 
-    const child = spawn(shell, [shellArg, command], {
+    const spawnOptions: SpawnOptions = {
       cwd: options.cwd,
       env: process.env,
       shell: true,
-    });
+      timeout: options.timeout * 1000 // 将秒转换为毫秒
+    };
+
+    const child = spawn(shell, [shellArg, command], spawnOptions);
 
     let stdout = '';
     let stderr = '';
 
-    child.stdout.on('data', (data) => {
+    child.stdout?.on('data', (data) => {
       stdout += data.toString();
     });
 
-    child.stderr.on('data', (data) => {
+    child.stderr?.on('data', (data) => {
       stderr += data.toString();
     });
 
@@ -78,7 +83,11 @@ async function executeCommand(command: string, options: any): Promise<{ stdout: 
     });
 
     child.on('error', (err) => {
-      reject(err);
+      if ((err as any).code === 'ETIMEDOUT') {
+        reject(new Error(`命令执行超时 (超过 ${options.timeout} 秒)`));
+      } else {
+        reject(err);
+      }
     });
   });
 }
@@ -88,97 +97,55 @@ export default async function (request: any) {
     const { command, commands, mode, timeout, cwd, platform: requestedPlatform, safe_mode } = request.params.arguments;
 
     if (!command && !commands) {
-      throw new Error("必须提供 'command' 或 'commands' 参数");
+      throw new Error("必须提供 'command' 或 'commands' 参数之一。");
     }
 
     if (command && commands) {
-      throw new Error("'command' 和 'commands' 参数不能同时提供");
+      throw new Error("'command' 和 'commands' 参数不能同时提供。");
     }
 
     const osPlatform = requestedPlatform === 'auto' ? platform() : requestedPlatform;
     const options = {
       cwd: cwd || process.cwd(),
-      timeout: timeout || 30,
-      platform: osPlatform,
-      safe_mode: safe_mode !== false // 显式设置为false才禁用
+      timeout: timeout || 60,
+      platform: osPlatform
     };
+
+    const allCommands = command ? [command] : (commands || []);
 
     if (safe_mode) {
-      if (command && dangerousCommands.includes(command)) {
-        throw new Error("该命令被安全模式阻止");
-      }
-      if (commands && commands.some(cmd => dangerousCommands.includes(cmd))) {
-        throw new Error("存在命令被安全模式阻止");
+      for (const cmd of allCommands) {
+        if (isCommandDangerous(cmd)) {
+          throw new Error(`命令 "${cmd}" 被安全模式阻止。`);
+        }
       }
     }
-
-    let allCommands = command ? [command] : commands;
-    let results: any = [];
 
     if (mode === 'sync') {
+      const results = [];
       for (const cmd of allCommands) {
-        const startTime = Date.now();
         const { stdout, stderr, code } = await executeCommand(cmd, options);
-        const endTime = Date.now();
-        const duration = endTime - startTime;
-
-        const logMessage = `[${new Date().toISOString()}] Command: ${cmd}, Code: ${code}, Duration: ${duration}ms, Stdout: ${stdout}, Stderr: ${stderr}\n`;
-        fs.appendFileSync(cliLogFile, logMessage, 'utf8');
-
         results.push({
           type: "text",
-          text: JSON.stringify({ stdout, stderr, code }, null, 2)
+          text: JSON.stringify({ command: cmd, stdout, stderr, code }, null, 2)
         });
       }
-    } else {
-      // 异步模式
+      return { content: results };
+    } else { // async mode
       for (const cmd of allCommands) {
-        const startTime = Date.now();
-        executeCommand(cmd, options)
-          .then(({ stdout, stderr, code }) => {
-            const endTime = Date.now();
-            const duration = endTime - startTime;
-
-            const logMessage = `[${new Date().toISOString()}] Command: ${cmd}, Code: ${code}, Duration: ${duration}ms, Stdout: ${stdout}, Stderr: ${stderr}\n`;
-            fs.appendFileSync(cliLogFile, logMessage, 'utf8');
-
-            results.push({
-              type: "text",
-              text: JSON.stringify({ stdout, stderr, code }, null, 2)
-            });
-          })
-          .catch(err => {
-            const endTime = Date.now();
-            const duration = endTime - startTime;
-
-            const logMessage = `[${new Date().toISOString()}] Command: ${cmd}, Error: ${err instanceof Error ? err.message : String(err)}, Duration: ${duration}ms\n`;
-            fs.appendFileSync(cliLogFile, logMessage, 'utf8');
-
-            results.push({
-              type: "text",
-              text: `Error: ${err instanceof Error ? err.message : String(err)}`
-            });
-          });
+        executeCommand(cmd, options).catch(error => {
+          // 异步错误不会直接返回给用户，但会被框架的日志系统捕获
+          console.error(`异步命令执行失败: ${cmd}`, error);
+        });
       }
-      // 异步模式下立即返回，不等待命令完成
       return {
-        content: [
-          {
-            type: "text",
-            text: "异步命令已启动，请查看日志"
-          }
-        ]
+        content: [{
+          type: "text",
+          text: `已为 ${allCommands.length} 个命令启动异步执行。请检查系统日志以了解完成状态。`
+        }]
       };
     }
-
-    return {
-      content: results,
-      isError: false
-    };
-
   } catch (error) {
-    const logMessage = `[${new Date().toISOString()}] Error: ${error instanceof Error ? error.message : String(error)}\n`;
-    fs.appendFileSync(cliLogFile, logMessage, 'utf8');
     return {
       content: [
         {

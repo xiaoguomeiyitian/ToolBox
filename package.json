@@ -50,9 +50,9 @@
     "vitest": "^3.0.8"
   },
   "dependencies": {
-    "@xiaoguomeiyitian/utils": "^0.1.2",
     "@google/generative-ai": "^0.24.1",
     "@modelcontextprotocol/sdk": "^1.17.3",
+    "@xiaoguomeiyitian/utils": "^0.1.2",
     "archiver": "^7.0.1",
     "decimal.js": "^10.6.0",
     "dotenv": "^17.2.1",

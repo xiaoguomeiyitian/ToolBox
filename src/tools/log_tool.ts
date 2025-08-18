@@ -46,7 +46,7 @@ export const schema = {
       description: 'End time (ISO8601)',
     },
   },
-  required: ['pageSize', 'page']
+  required: []
 };
 
 interface LogEntry {
@@ -62,16 +62,19 @@ export default async (request: any): Promise<{ content: any[]; isError?: boolean
     const params = request.params.arguments;
     let { pageSize, page, toolName, status, minDuration, maxDuration, startTime, endTime } = params;
 
-    // 参数预处理
-    pageSize = Math.min(pageSize, 100);
-    page = Math.max(page, 1);
+    // Parameter preprocessing
+    pageSize = Math.min(pageSize || 10, 100);
+    page = Math.max(page || 1, 1);
     const skip = (page - 1) * pageSize;
     const take = pageSize;
-    const maxResults = 100;
 
+    const paginatedLogs: LogEntry[] = [];
+    let matchedCount = 0;
 
-    const logs: LogEntry[] = [];
-    let count = 0;
+    // Check if log file exists
+    if (!fs.existsSync(logFile)) {
+      return { content: [{ type: 'text', text: JSON.stringify([], null, 2) }] };
+    }
 
     const fileStream = fs.createReadStream(logFile);
     const rl = readline.createInterface({
@@ -80,29 +83,36 @@ export default async (request: any): Promise<{ content: any[]; isError?: boolean
     });
 
     for await (const line of rl) {
+      try {
+        if (line.trim() === '') continue;
+        const logEntry: LogEntry = JSON.parse(line);
+        logEntry.tool = logEntry.tool || 'unknown';
 
-      const logEntry: LogEntry = JSON.parse(line);
-      logEntry.tool = logEntry.tool || 'unknown'; // Handle missing tool field
+        // Apply filters
+        if (toolName && !new RegExp(toolName).test(logEntry.tool)) continue;
+        if (status && logEntry.stat !== status) continue;
+        if (minDuration && logEntry.cost < minDuration) continue;
+        if (maxDuration && logEntry.cost > maxDuration) continue;
+        if (startTime && new Date(logEntry.ts) < new Date(startTime)) continue;
+        if (endTime && new Date(logEntry.ts) > new Date(endTime)) continue;
 
-      // Apply filters
-      if (toolName && !new RegExp(toolName).test(logEntry.tool)) continue;
-      if (status && logEntry.stat !== status) continue;
-      if (minDuration && logEntry.cost < minDuration) continue;
-      if (maxDuration && logEntry.cost > maxDuration) continue;
-      if (startTime && new Date(logEntry.ts) < new Date(startTime)) continue;
-      if (endTime && new Date(logEntry.ts) > new Date(endTime)) continue;
+        // If filters pass, check for pagination
+        if (matchedCount >= skip) {
+          paginatedLogs.push(logEntry);
+        }
+        
+        matchedCount++;
 
-      logs.push(logEntry);
-      count++;
-
-      if (count >= maxResults) {
-        break; // Limit the number of results
+        // If the page is full, stop reading
+        if (paginatedLogs.length >= take) {
+          rl.close();
+          fileStream.destroy();
+          break;
+        }
+      } catch (parseError) {
+        // Ignore lines that are not valid JSON
       }
     }
-
-    const startIndex = skip;
-    const endIndex = Math.min(startIndex + take, logs.length);
-    const paginatedLogs = logs.slice(startIndex, endIndex);
 
     return { content: [{ type: 'text', text: JSON.stringify(paginatedLogs, null, 2) }] };
   } catch (error: any) {

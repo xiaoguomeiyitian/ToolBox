@@ -63,8 +63,8 @@ async function main() {
     server.setRequestHandler(ListPromptsRequestSchema, listPromptsHandler);
     server.setRequestHandler(GetPromptRequestSchema, getPromptHandler);
 
-    const seeProt = Number(process.env.SSEPORT);
-    if (!isNaN(seeProt)) {
+    const prot = Number(process.env.PORT);
+    if (!isNaN(prot)) {
       const app = express();
       app.use(express.json());
       // 用于按会话 ID 存储传输的映射
@@ -124,8 +124,8 @@ async function main() {
       app.get('/mcp', handleSessionRequest);
       // 处理会话终止的 DELETE 请求
       app.delete('/mcp', handleSessionRequest);
-      app.listen(seeProt);
-      console.log(`StreamableHttp server listening on http://localhost:${seeProt}/mcp`);
+      app.listen(prot);
+      console.log(`StreamableHttp server listening on http://localhost:${prot}/mcp`);
     } else {
       // 启动服务器
       console.log('Connecting to transport...');

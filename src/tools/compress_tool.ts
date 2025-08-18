@@ -40,18 +40,33 @@ async function compressZip(source: string, dest: string) {
         output.on('close', () => resolve(undefined));
         archive.on('error', (err) => reject(err));
 
-        archive.directory(source, path.basename(source));
+        const stats = fs.statSync(source);
+        if (stats.isDirectory()) {
+            archive.directory(source, false);
+        } else {
+            archive.file(source, { name: path.basename(source) });
+        }
+
         archive.pipe(output);
         archive.finalize();
     });
 }
 
 async function compressTar(source: string, dest: string, gzip: boolean) {
+    const stats = fs.statSync(source);
+    let cwd, files;
+    if (stats.isDirectory()) {
+        cwd = source;
+        files = ['.'];
+    } else {
+        cwd = path.dirname(source);
+        files = [path.basename(source)];
+    }
     await tar.c({
         gzip,
         file: dest,
-        cwd: path.dirname(source),
-    }, [path.basename(source)]);
+        cwd,
+    }, files);
 }
 
 async function extractZip(source: string, dest: string) {
@@ -76,6 +91,18 @@ export default async (request: any) => {
     try {
         const { action, sourcePath, destinationPath, format } = request.params.arguments;
 
+        if (!fs.existsSync(sourcePath)) {
+            throw new Error(`Source path does not exist: ${sourcePath}`);
+        }
+
+        const destDir = path.dirname(destinationPath);
+        if (!fs.existsSync(destDir)) {
+            // For extraction, we can create the directory. For compression, it must exist.
+            if (action === 'compress') {
+                throw new Error(`Destination directory does not exist: ${destDir}`);
+            }
+        }
+
         if (action === 'compress') {
             if (format === 'zip') {
                 await compressZip(sourcePath, destinationPath);
@@ -85,6 +112,7 @@ export default async (request: any) => {
                 await compressTar(sourcePath, destinationPath, true);
             }
         } else if (action === 'extract') {
+            await fse.ensureDir(destinationPath); // Ensure destination directory exists for extraction
             if (format === 'zip') {
                 await extractZip(sourcePath, destinationPath);
             } else if (format === 'tar' || format === 'tar.gz') {

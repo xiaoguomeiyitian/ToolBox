@@ -1,120 +1,128 @@
-/** time_tool 工具的参数列表 */
+// Helper to validate timezone
+function isValidTimeZone(tz: string) {
+    if (!tz) return false;
+    try {
+        Intl.DateTimeFormat(undefined, { timeZone: tz });
+        return true;
+    } catch (ex) {
+        return false;
+    }
+}
+
 export const schema = {
     name: "time_tool",
-    description: "Get current time",
+    description: "Get and convert time, supporting timezones, formatting, and timestamp operations.",
     type: "object",
     properties: {
-        format: {
+        action: {
             type: "string",
-            description: "Time format (iso, timestamp, local, custom)",
-            enum: ["iso", "timestamp", "local", "custom"]
+            description: "The operation to perform.",
+            enum: ["get_current_time", "format_time", "from_timestamp", "to_timestamp"],
         },
-        pattern: {
+        time_str: {
             type: "string",
-            description: "Custom format pattern (required if format=custom)"
+            description: "An ISO 8601 time string (e.g., '2025-03-15T10:00:00Z'). Required for 'format_time' and 'to_timestamp'."
         },
         timezone: {
             type: "string",
-            description: "Timezone (e.g., Asia/Shanghai)"
+            description: "The target timezone (e.g., 'UTC', 'America/New_York', 'Asia/Shanghai')."
         },
         timestamp: {
             type: "number",
-            description: "Timestamp to convert"
+            description: "Unix timestamp in milliseconds. Required for 'from_timestamp'."
         },
-        targetTimezone: {
-            type: "string",
-            description: "Target timezone for timestamp conversion (e.g., America/New_York)"
+        format_options: {
+            type: "object",
+            description: "Formatting options for the time string, based on Intl.DateTimeFormat.",
+            properties: {
+                year: { type: "string", enum: ["numeric", "2-digit"] },
+                month: { type: "string", enum: ["numeric", "2-digit", "long", "short", "narrow"] },
+                day: { type: "string", enum: ["numeric", "2-digit"] },
+                hour: { type: "string", enum: ["numeric", "2-digit"] },
+                minute: { type: "string", enum: ["numeric", "2-digit"] },
+                second: { type: "string", enum: ["numeric", "2-digit"] },
+                timeZoneName: { type: "string", enum: ["long", "short"] }
+            }
         }
     },
-    required: []
+    required: ["action"]
 };
 
-enum TimeFormat {
-    ISO = 'iso',
-    TIMESTAMP = 'timestamp',
-    LOCAL = 'local',
-    CUSTOM = 'custom',
-    CONVERT_TIMESTAMP = 'convert_timestamp'
+// Action: get_current_time
+async function getCurrentTime(timezone: string | undefined, format_options: object | undefined) {
+    const now = new Date();
+    if (timezone && !isValidTimeZone(timezone)) {
+        throw new Error(`Invalid timezone: ${timezone}`);
+    }
+    return new Intl.DateTimeFormat('en-US', { ...format_options, timeZone: timezone }).format(now);
 }
 
-const timezoneWhitelist = ['Asia/Shanghai', 'America/New_York'];
+// Action: format_time
+async function formatTime(time_str: string, timezone: string | undefined, format_options: object | undefined) {
+    const date = new Date(time_str);
+    if (isNaN(date.getTime())) {
+        throw new Error(`Invalid time_str format: "${time_str}". Please use ISO 8601 format.`);
+    }
+    if (timezone && !isValidTimeZone(timezone)) {
+        throw new Error(`Invalid timezone: ${timezone}`);
+    }
+    return new Intl.DateTimeFormat('en-US', { ...format_options, timeZone: timezone }).format(date);
+}
+
+// Action: from_timestamp
+async function fromTimestamp(timestamp: number, timezone: string | undefined, format_options: object | undefined) {
+    const date = new Date(timestamp);
+    if (timezone && !isValidTimeZone(timezone)) {
+        throw new Error(`Invalid timezone: ${timezone}`);
+    }
+    return new Intl.DateTimeFormat('en-US', { ...format_options, timeZone: timezone }).format(date);
+}
+
+// Action: to_timestamp
+async function toTimestamp(time_str: string) {
+    const date = new Date(time_str);
+    if (isNaN(date.getTime())) {
+        throw new Error(`Invalid time_str format: "${time_str}". Please use ISO 8601 format.`);
+    }
+    return date.getTime();
+}
+
 
 export default async (request: any) => {
     try {
-        const format: TimeFormat = request.params.arguments?.format || TimeFormat.ISO;
-        const pattern: string = request.params.arguments?.pattern;
-        const timezone: string = request.params.arguments?.timezone;
-        const timestamp: number = request.params.arguments?.timestamp;
-        const targetTimezone: string = request.params.arguments?.targetTimezone;
+        const { action, time_str, timezone, timestamp, format_options } = request.params.arguments;
 
-        let date: Date;
-        let formattedTime: string;
+        let result: string | number;
 
-        if (timestamp && targetTimezone) {
-            if (timezoneWhitelist.indexOf(targetTimezone) === -1) {
-                throw new Error(`Invalid target timezone: ${targetTimezone}`);
-            }
-            date = new Date(timestamp);
-            formattedTime = date.toLocaleString('en-US', { timeZone: targetTimezone });
-        } else {
-            let now = new Date();
+        switch (action) {
+            case "get_current_time":
+                result = await getCurrentTime(timezone, format_options);
+                break;
+            
+            case "format_time":
+                if (!time_str) throw new Error("time_str is required for format_time");
+                result = await formatTime(time_str, timezone, format_options);
+                break;
 
-            if (timezone && timezoneWhitelist.indexOf(timezone) === -1) {
-                throw new Error(`Invalid timezone: ${timezone}`);
-            }
+            case "from_timestamp":
+                if (timestamp === undefined) throw new Error("timestamp is required for from_timestamp");
+                result = await fromTimestamp(timestamp, timezone, format_options);
+                break;
 
-            date = timezone ? new Date(now.toLocaleString('en-US', { timeZone: timezone })) : now;
+            case "to_timestamp":
+                if (!time_str) throw new Error("time_str is required for to_timestamp");
+                result = await toTimestamp(time_str);
+                break;
 
-            switch (format) {
-                case TimeFormat.ISO:
-                    formattedTime = date.toISOString();
-                    break;
-                case TimeFormat.TIMESTAMP:
-                    formattedTime = String(date.getTime());
-                    break;
-                case TimeFormat.LOCAL:
-                    formattedTime = date.toLocaleString();
-                    break;
-                case TimeFormat.CUSTOM:
-                    if (!pattern) {
-                        throw new Error("Pattern is required for custom format");
-                    }
-
-                    if (pattern.length < 2 || pattern.length > 50) {
-                        throw new Error("Pattern length must be between 2 and 50 characters");
-                    }
-
-                    const replacements = {
-                        'YYYY': String(date.getFullYear()),
-                        'MM': String(date.getMonth() + 1).padStart(2, '0'),
-                        'DD': String(date.getDate()).padStart(2, '0'),
-                        'HH': String(date.getHours()).padStart(2, '0'),
-                        'mm': String(date.getMinutes()).padStart(2, '0'),
-                        'ss': String(date.getSeconds()).padStart(2, '0'),
-                    };
-
-                    formattedTime = pattern.replace(/(YYYY|MM|DD|HH|mm|ss)/gi, matched => replacements[matched] || matched);
-                    break;
-                case TimeFormat.CONVERT_TIMESTAMP:
-                    if (!timestamp || !targetTimezone) {
-                        throw new Error("Timestamp and targetTimezone are required for convert_timestamp format");
-                    }
-                    if (timezoneWhitelist.indexOf(targetTimezone) === -1) {
-                        throw new Error(`Invalid target timezone: ${targetTimezone}`);
-                    }
-                    date = new Date(timestamp);
-                    formattedTime = date.toLocaleString('en-US', { timeZone: targetTimezone });
-                    break;
-                default:
-                    throw new Error(`Invalid format: ${format}`);
-            }
+            default:
+                throw new Error(`Invalid action: ${action}`);
         }
 
         return {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(`Current time: ${formattedTime}`, null, 2),
+                    text: JSON.stringify({ result }, null, 2),
                 },
             ],
         };
@@ -123,7 +131,7 @@ export default async (request: any) => {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(`Error getting time: ${error.message}`, null, 2),
+                    text: JSON.stringify({ error: error.message }, null, 2),
                 },
             ],
             isError: true
@@ -133,6 +141,5 @@ export default async (request: any) => {
 
 // Destroy function
 export async function destroy() {
-    // Release resources, stop timers, disconnect, etc.
     console.log("Destroy time_tool");
 }

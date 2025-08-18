@@ -1,521 +1,244 @@
 import { MongoClient, Db } from 'mongodb';
 
 const mongoUri = process.env.MONGO_URI;
-if (!mongoUri) throw new Error("MONGO_URI environment variable is not set.");
-const mongoClient = await MongoClient.connect(mongoUri, {
-    maxPoolSize: 5,
-    maxIdleTimeMS: 60 * 1000,
-    connectTimeoutMS: 30000,
-    socketTimeoutMS: 45000
-});
+if (!mongoUri) { 
+    console.warn("警告: 环境变量 MONGO_URI 未设置，mongo_tool 将不可用。"); 
+}
 
 /** mongo_tool 工具的参数列表 */
 export const schema = {
     name: "mongo_tool",
-    description: "MongoDB tool for queries, CRUD, aggregations, and index management",
+    description: "功能全面的MongoDB工具，支持CRUD查询、聚合、索引和集合管理。",
     type: "object",
     properties: {
-        where: {
-            type: "string",
-            description: "Query condition (JSON string)",
-        },
         dbName: {
             type: "string",
-            description: "MongoDB database name",
+            description: "MongoDB 数据库名称",
         },
         collectionName: {
             type: "string",
-            description: "MongoDB collection name",
-        },
-        field: {
-            type: "string",
-            description: "Field name for distinct operation",
+            description: "MongoDB 集合名称",
         },
         queryType: {
             type: "string",
-            description: "MongoDB query type",
+            description: "MongoDB 查询类型",
             enum: [
-                "find",
-                "findOne",
-                "aggregate",
-                "count",
-                "distinct",
-                "insertOne",
-                "updateOne",
-                "deleteOne",
-                "insertMany",
-                "updateMany",
-                "deleteMany",
-                "bulkWrite",
-                "estimatedDocumentCount",
-                "findOneAndUpdate",
-                "findOneAndDelete",
-                "findOneAndReplace"
-            ],
-            default: "find",
-        },
-        data: {
-            type: "string",
-            description: "Data for insert/update (JSON string)",
-        },
-        updateOperators: {
-            type: "string",
-            description: "Update operators (JSON string)",
-        },
-        options: {
-            type: "string",
-            description: "Additional options (JSON string)",
+                "find", "findOne", "aggregate", "count", "distinct",
+                "insertOne", "updateOne", "deleteOne", "insertMany", "updateMany", "deleteMany",
+                "bulkWrite", "findOneAndUpdate", "findOneAndDelete", "findOneAndReplace"
+            ]
         },
         operationType: {
             type: "string",
             enum: [
-                "createIndex",
-                "createIndexes",
-                "dropIndex",
-                "dropIndexes",
-                "listIndexes",
-                "listCollections",
-                "colls",
-                "createCollection",
-                "dropCollection",
-                "renameCollection",
-                "collStats",
-                "dbStats"
+                "createIndex", "dropIndex", "listIndexes", "listCollections",
+                "createCollection", "dropCollection", "renameCollection", "collStats", "dbStats"
             ],
-            description: "DB operation type (index/collection management)"
+            description: "数据库管理操作类型 (索引/集合管理)"
         },
-        indexes: {
-            type: "string",
-            description: "Index specification (JSON)"
+        where: {
+            type: "object",
+            description: "查询条件 (BSON/JSON 对象)",
         },
-        indexOptions: {
-            type: "string",
-            description: "Index options (JSON string)"
+        data: {
+            type: ["object", "array"],
+            description: "用于插入或替换的数据 (单个对象或对象数组)",
+        },
+        updateOperators: {
+            type: "object",
+            description: "更新操作符 (例如: { $set: { field: 'value' } })",
         },
         pipeline: {
+            type: "array",
+            description: "聚合管道阶段 (对象数组)"
+        },
+        field: {
             type: "string",
-            description: "Aggregation pipeline stages (JSON string)"
+            description: "用于 distinct 操作的字段名",
+        },
+        indexes: {
+            type: "object",
+            description: "索引规范 (例如: { field: 1 })"
         },
         newName: {
             type: "string",
-            description: "New name for renameCollection"
+            description: "用于 renameCollection 的新名称"
         },
         bulkOperations: {
-            type: "string",
-            description: "Bulk write operations (JSON string)"
+            type: "array",
+            description: "批量写入操作数组"
         },
-        explain: {
-            type: "boolean",
-            description: "Return execution plan info instead of results",
-            default: false
-        },
-        explainVerbosity: {
-            type: "string",
-            enum: ["queryPlanner", "executionStats", "allPlansExecution"],
-            description: "Verbosity mode for explain output",
-            default: "queryPlanner"
+        options: {
+            type: "object",
+            description: "其他选项 (例如: { sort: { field: -1 }, limit: 10 })",
         }
     },
     required: ["dbName"]
 };
 
-// Destroy function
-export async function destroy() {
-    // Release resources, stop timers, disconnect, etc.
-    console.log("Destroy mongo_tool");
-    if (mongoClient) {
-        try {
-            await mongoClient.close();
-        } catch (error) {
-            console.error("Failed to close MongoDB client:", error);
-        }
+async function getClient(): Promise<MongoClient> {
+    if (!mongoUri) {
+        throw new Error("环境变量 MONGO_URI 未设置，无法连接到 MongoDB。");
     }
-}
-const isValidQuery = (query: string): boolean => {
-    // Enhanced validation to prevent injection attacks
-    if (query.includes("$where") || query.includes("eval(") || query.includes("$function")) {
-        return false;
-    }
-
-    try {
-        const parsed = JSON.parse(query);
-        // Additional validation logic could be added here
-        return true;
-    } catch (e) {
-        return false;
-    }
-};
-
-// 文本索引校验
-function validateTextIndexFields(spec: Record<string, any>) {
-    const textFields = Object.values(spec).filter(v => v === 'text');
-    if (textFields.length > 3) {
-        throw new Error("Text index supports up to 3 fields");
-    }
-}
-
-// 安全解析JSON字符串
-function safeParseJSON(jsonString: string | undefined, defaultValue: any = {}) {
-    if (!jsonString) return defaultValue;
-    try {
-        return JSON.parse(jsonString);
-    } catch (e) {
-        throw new Error(`Invalid JSON format: ${e instanceof Error ? e.message : String(e)}`);
-    }
+    const client = new MongoClient(mongoUri, {
+        maxPoolSize: 5,
+        maxIdleTimeMS: 60000,
+        connectTimeoutMS: 30000,
+        socketTimeoutMS: 45000
+    });
+    await client.connect();
+    return client;
 }
 
 export default async (request: any) => {
+    let client: MongoClient | null = null;
     try {
         const args = request.params.arguments || {};
-        const dbName = String(args.dbName);
-        const collectionName = args.collectionName ? String(args.collectionName) : null;
-        const queryType = String(args.queryType || "find");
-        const operationType = args.operationType;
-        const explain = Boolean(args.explain || false);
-        const explainVerbosity = args.explainVerbosity || "queryPlanner";
+        const { 
+            dbName, collectionName, queryType, operationType, 
+            where = {}, data, updateOperators, pipeline, field, 
+            indexes, newName, bulkOperations, options = {} 
+        } = args;
 
-        // Check for index operations permission
-        if (process.env.MONGO_INDEX_OPS !== 'true' &&
-            (operationType === 'createIndex' ||
-                operationType === 'createIndexes' ||
-                operationType === 'dropIndex' ||
-                operationType === 'dropIndexes')) {
-            throw new Error('Please configure the MCP environment variable "MONGO_INDEX_OPS": "true" to perform index-related operations.');
+        if (!operationType && !queryType) {
+            throw new Error("必须提供 'operationType' 或 'queryType' 参数之一。");
+        }
+        if (operationType && queryType) {
+            throw new Error("'operationType' 和 'queryType' 参数不能同时提供。");
         }
 
-        // Get database and collection
-        const db: Db = mongoClient.db(dbName);
+        client = await getClient();
+        const db: Db = client.db(dbName);
         const collection = collectionName ? db.collection(collectionName) : null;
-
-        // Parse options if provided
-        const options = args.options ? safeParseJSON(args.options) : {};
 
         let results: any;
 
-        // Handle database/collection operations
         if (operationType) {
             switch (operationType) {
                 case "createIndex":
-                    if (!collection) throw new Error("Collection name is required for createIndex operation");
-                    const indexSpec = safeParseJSON(args.indexes);
-                    validateTextIndexFields(indexSpec);
-                    const indexOptions = safeParseJSON(args.indexOptions, {});
-                    results = await collection.createIndex(indexSpec, indexOptions);
+                    if (!collection) throw new Error("创建索引需要 'collectionName'。");
+                    if (!indexes) throw new Error("创建索引需要 'indexes' 对象。");
+                    results = await collection.createIndex(indexes, options);
                     break;
-
-                case "createIndexes":
-                    if (!collection) throw new Error("Collection name is required for createIndexes operation");
-                    const indexesArray = safeParseJSON(args.indexes);
-                    if (!Array.isArray(indexesArray)) {
-                        throw new Error("Indexes must be an array for createIndexes operation");
-                    }
-                    results = await collection.createIndexes(indexesArray);
-                    break;
-
                 case "dropIndex":
-                    if (!collection) throw new Error("Collection name is required for dropIndex operation");
-                    const dropIndexSpec = safeParseJSON(args.indexes);
-                    results = await collection.dropIndex(dropIndexSpec);
+                    if (!collection) throw new Error("删除索引需要 'collectionName'。");
+                    if (!indexes) throw new Error("删除索引需要 'indexes' 对象或索引名称字符串。");
+                    results = await collection.dropIndex(indexes, options);
                     break;
-
-                case "dropIndexes":
-                    if (!collection) throw new Error("Collection name is required for dropIndexes operation");
-                    results = await collection.dropIndexes();
-                    break;
-
                 case "listIndexes":
-                    if (!collection) throw new Error("Collection name is required for listIndexes operation");
+                    if (!collection) throw new Error("列出索引需要 'collectionName'。");
                     results = await collection.listIndexes().toArray();
                     break;
-
                 case "listCollections":
-                    const filter = args.where ? safeParseJSON(args.where) : {};
-                    results = await db.listCollections(filter, options).toArray();
+                    results = await db.listCollections(where, options).toArray();
                     break;
-                case "colls":
-                    const filterColls = args.where ? safeParseJSON(args.where) : {};
-                    results = await db.listCollections(filterColls, options).toArray();
+                case "createCollection":
+                    if (!collectionName) throw new Error("创建集合需要 'collectionName'。");
+                    await db.createCollection(collectionName, options);
+                    results = { success: true, message: `集合 '${collectionName}' 创建成功。` };
                     break;
-
                 case "dropCollection":
-                    if (!collectionName) throw new Error("Collection name is required for dropCollection operation");
+                    if (!collectionName) throw new Error("删除集合需要 'collectionName'。");
                     results = await db.dropCollection(collectionName);
                     break;
-
-                case "createCollection":
-                    if (!collectionName) throw new Error("Collection name is required for createCollection operation");
-                    await db.createCollection(collectionName, options);
-                    results = {
-                        success: true,
-                        message: `Collection '${collectionName}' created successfully`
-                    };
-                    break;
-
                 case "renameCollection":
-                    if (!collection) throw new Error("Collection name is required for renameCollection operation");
-                    if (!args.newName) {
-                        throw new Error("newName is required for renameCollection operation");
-                    }
-                    await collection.rename(args.newName);
-                    results = {
-                        success: true,
-                        message: `Collection '${collectionName}' renamed to '${args.newName}' successfully`
-                    };
+                    if (!collection) throw new Error("重命名集合需要 'collectionName'。");
+                    if (!newName) throw new Error("重命名集合需要 'newName'。");
+                    await collection.rename(newName, options);
+                    results = { success: true, message: `集合 '${collectionName}' 已成功重命名为 '${newName}'。` };
                     break;
                 case "collStats":
-                    if (!collectionName) throw new Error("Collection name is required for collStats operation");
-                    // 使用命令方式获取集合统计信息
+                    if (!collectionName) throw new Error("获取集合状态需要 'collectionName'。");
                     results = await db.command({ collStats: collectionName });
                     break;
-
                 case "dbStats":
-                    // 使用命令方式获取数据库统计信息
                     results = await db.command({ dbStats: 1 });
                     break;
-
                 default:
-                    throw new Error(`Unsupported operation type: ${operationType}`);
+                    throw new Error(`不支持的操作类型: ${operationType}`);
             }
-        }
-        // Handle query operations
-        else {
-            if (!collection) throw new Error("Collection name is required for query operations");
-
-            // Validate and parse where clause if needed
-            let where = {};
-            if (args.where && ["find", "findOne", "count", "updateOne", "updateMany", "deleteOne", "deleteMany",
-                "findOneAndUpdate", "findOneAndDelete", "findOneAndReplace"].includes(queryType)) {
-                if (!isValidQuery(args.where)) {
-                    throw new Error("Invalid query: Query contains potentially harmful operations.");
-                }
-                where = safeParseJSON(args.where);
-            }
+        } else {
+            if (!collection) throw new Error("查询操作需要 'collectionName'。");
 
             switch (queryType) {
                 case "find":
-                    const cursor = collection.find(where, options);
-
-                    // Apply sort, limit, skip if provided in options
-                    if (options.sort) cursor.sort(options.sort);
-                    if (options.limit) cursor.limit(options.limit);
-                    if (options.skip) cursor.skip(options.skip);
-
-                    if (explain) {
-                        // Use explain() with the specified verbosity
-                        results = await cursor.explain(explainVerbosity);
-                    } else {
-                        results = await cursor.toArray();
-                    }
+                    results = await collection.find(where, options).toArray();
                     break;
-
                 case "findOne":
-                    if (explain) {
-                        // For findOne with explain, we need to use find() with limit(1) and explain
-                        const explainCursor = collection.find(where, options).limit(1);
-                        results = await explainCursor.explain(explainVerbosity);
-                    } else {
-                        results = await collection.findOne(where, options);
-                    }
+                    results = await collection.findOne(where, options);
                     break;
-
                 case "aggregate":
-                    const pipeline = args.pipeline ? safeParseJSON(args.pipeline) : [];
-                    if (!Array.isArray(pipeline)) {
-                        throw new Error("Pipeline must be an array for aggregate operation");
-                    }
-
-                    if (explain) {
-                        // Use explain option for aggregate
-                        const aggregateCursor = collection.aggregate(pipeline, options);
-                        results = await aggregateCursor.explain(explainVerbosity);
-                    } else {
-                        results = await collection.aggregate(pipeline, options).toArray();
-                    }
+                    if (!pipeline) throw new Error("聚合操作需要 'pipeline' 数组。");
+                    results = await collection.aggregate(pipeline, options).toArray();
                     break;
-
                 case "count":
-                    if (explain) {
-                        // For count with explain, we need to use the aggregate framework
-                        const countPipeline = [
-                            { $match: where },
-                            { $count: "count" }
-                        ];
-                        const countCursor = collection.aggregate(countPipeline, options);
-                        results = await countCursor.explain(explainVerbosity);
-                    } else {
-                        results = await collection.countDocuments(where, options);
-                    }
+                    results = await collection.countDocuments(where, options);
                     break;
-
-                case "estimatedDocumentCount":
-                    // explain is not directly supported for estimatedDocumentCount
-                    if (explain) {
-                        throw new Error("explain is not supported for estimatedDocumentCount operation");
-                    }
-                    results = await collection.estimatedDocumentCount(options);
-                    break;
-
                 case "distinct":
-                    if (!args.field) {
-                        throw new Error("Field name is required in 'field' for distinct operation");
-                    }
-                    const query = Object.values(where)[0] || {};
-
-                    if (explain) {
-                        // For distinct with explain, we need to use the aggregate framework
-                        const distinctPipeline = [
-                            { $match: query },
-                            { $group: { _id: `$${args.field}` } }
-                        ];
-                        const distinctCursor = collection.aggregate(distinctPipeline, options);
-                        results = await distinctCursor.explain(explainVerbosity);
-                    } else {
-                        results = await collection.distinct(args.field, query);
-                    }
+                    if (!field) throw new Error("Distinct 操作需要 'field' 字段名。");
+                    results = await collection.distinct(field, where, options);
                     break;
-
                 case "insertOne":
-                    if (explain) {
-                        throw new Error("explain is not supported for insertOne operation");
-                    }
-                    if (!args.data) {
-                        throw new Error("Data is required for insertOne operation");
-                    }
-                    const insertData = safeParseJSON(args.data);
-                    results = await collection.insertOne(insertData, options);
+                    if (!data) throw new Error("插入单条数据需要 'data' 对象。");
+                    results = await collection.insertOne(data, options);
                     break;
-
-                case "insertMany":
-                    if (explain) {
-                        throw new Error("explain is not supported for insertMany operation");
-                    }
-                    if (!args.data) {
-                        throw new Error("Data is required for insertMany operation");
-                    }
-                    const insertManyData = safeParseJSON(args.data);
-                    if (!Array.isArray(insertManyData)) {
-                        throw new Error("Data must be an array for insertMany operation");
-                    }
-                    results = await collection.insertMany(insertManyData, options);
-                    break;
-
                 case "updateOne":
-                    if (explain) {
-                        throw new Error("explain is not supported for updateOne operation");
-                    }
-                    if (!args.updateOperators) {
-                        throw new Error("Update operators are required for updateOne operation");
-                    }
-                    const updateOps = safeParseJSON(args.updateOperators);
-                    results = await collection.updateOne(where, updateOps, options);
+                    if (!updateOperators) throw new Error("更新单条数据需要 'updateOperators' 对象。");
+                    results = await collection.updateOne(where, updateOperators, options);
                     break;
-
-                case "updateMany":
-                    if (explain) {
-                        throw new Error("explain is not supported for updateMany operation");
-                    }
-                    if (!args.updateOperators) {
-                        throw new Error("Update operators are required for updateMany operation");
-                    }
-                    const updateManyOps = safeParseJSON(args.updateOperators);
-                    results = await collection.updateMany(where, updateManyOps, options);
-                    break;
-
                 case "deleteOne":
-                    if (explain) {
-                        throw new Error("explain is not supported for deleteOne operation");
-                    }
                     results = await collection.deleteOne(where, options);
                     break;
-
+                case "insertMany":
+                    if (!Array.isArray(data)) throw new Error("插入多条数据需要 'data' 数组。");
+                    results = await collection.insertMany(data, options);
+                    break;
+                case "updateMany":
+                    if (!updateOperators) throw new Error("更新多条数据需要 'updateOperators' 对象。");
+                    results = await collection.updateMany(where, updateOperators, options);
+                    break;
                 case "deleteMany":
-                    if (explain) {
-                        throw new Error("explain is not supported for deleteMany operation");
-                    }
                     results = await collection.deleteMany(where, options);
                     break;
-
                 case "bulkWrite":
-                    if (explain) {
-                        throw new Error("explain is not supported for bulkWrite operation");
-                    }
-                    if (!args.bulkOperations) {
-                        throw new Error("Bulk operations are required for bulkWrite operation");
-                    }
-                    const bulkOps = safeParseJSON(args.bulkOperations);
-                    if (!Array.isArray(bulkOps)) {
-                        throw new Error("Bulk operations must be an array");
-                    }
-                    results = await collection.bulkWrite(bulkOps, options);
+                    if (!Array.isArray(bulkOperations)) throw new Error("批量写入需要 'bulkOperations' 数组。");
+                    results = await collection.bulkWrite(bulkOperations, options);
                     break;
-
                 case "findOneAndUpdate":
-                    if (explain) {
-                        throw new Error("explain is not supported for findOneAndUpdate operation");
-                    }
-                    if (!args.updateOperators) {
-                        throw new Error("Update operators are required for findOneAndUpdate operation");
-                    }
-                    const findUpdateOps = safeParseJSON(args.updateOperators);
-                    results = await collection.findOneAndUpdate(where, findUpdateOps, options);
+                    if (!updateOperators) throw new Error("查找并更新需要 'updateOperators' 对象。");
+                    results = await collection.findOneAndUpdate(where, updateOperators, options);
                     break;
-
                 case "findOneAndDelete":
-                    if (explain) {
-                        throw new Error("explain is not supported for findOneAndDelete operation");
-                    }
                     results = await collection.findOneAndDelete(where, options);
                     break;
-
                 case "findOneAndReplace":
-                    if (explain) {
-                        throw new Error("explain is not supported for findOneAndReplace operation");
-                    }
-                    if (!args.data) {
-                        throw new Error("Replacement document is required for findOneAndReplace operation");
-                    }
-                    const replacement = safeParseJSON(args.data);
-                    results = await collection.findOneAndReplace(where, replacement, options);
+                    if (!data) throw new Error("查找并替换需要 'data' 对象。");
+                    results = await collection.findOneAndReplace(where, data, options);
                     break;
-
                 default:
-                    throw new Error(`Unsupported query type: ${queryType}`);
+                    throw new Error(`不支持的查询类型: ${queryType}`);
             }
         }
 
         return {
-            content: [
-                {
-                    type: "text",
-                    text: JSON.stringify(results, null, 2),
-                },
-            ],
+            content: [{ type: "text", text: JSON.stringify(results, null, 2) }],
         };
-    } catch (error: any) {
-        let errorMessage = "MongoDB operation error";
-        let errorCode = "UNKNOWN_ERROR";
-
-        if (error instanceof Error) {
-            errorMessage = error.message;
-            errorCode = error.name;
-        }
-
-        const errorResponse = {
-            error: {
-                code: errorCode,
-                message: errorMessage,
-                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-            },
-        };
-
+    } catch (error) {
         return {
-            content: [
-                {
-                    type: "text",
-                    text: JSON.stringify(errorResponse, null, 2),
-                },
-            ],
+            content: [{
+                type: "text",
+                text: `Error: ${error instanceof Error ? error.message : String(error)}`
+            }],
             isError: true,
         };
+    } finally {
+        if (client) {
+            await client.close();
+        }
     }
 };
+
+export async function destroy() {
+    // No persistent client to destroy, so this function is intentionally empty.
+    console.log("Destroy mongo_tool");
+}

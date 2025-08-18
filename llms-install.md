@@ -31,6 +31,21 @@ Replace the following placeholders in the Claude/Cline configuration file:
 }
 ```
 
+For configuring a `streamableHttp` type MCP server, configure the current MCP server in the Cline plugin as follows:
+```json
+{
+  "mcpServers": {
+    "ToolBox": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
+      "url": " http://localhost:3001/mcp"
+    }
+  }
+}
+```
+
 ## Installation Verification
 ```bash
 # Check service status

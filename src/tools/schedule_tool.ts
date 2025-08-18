@@ -80,9 +80,6 @@ function cancelTask(id: string) {
     const taskToCancel = scheduledTasks.find(task => task.id === id);
     if (taskToCancel && taskToCancel.timerId) {
         clearTimeout(taskToCancel.timerId);
-        if (taskToCancel.type === 'recurring') {
-            clearInterval(taskToCancel.timerId);
-        }
     }
     scheduledTasks = scheduledTasks.filter(task => task.id !== id);
     saveTasks();
@@ -117,16 +114,31 @@ async function scheduleTask(task: ScheduledTask) {
             }, delayMs);
             break;
         case 'recurring':
-            const interval = task.interval;
-            const num = parseInt(interval.substring(6));
-            const unit = interval.slice(String(num).length + 6);
+            const intervalStr = task.interval;
+            const num = parseInt(intervalStr.substring(6));
+            const unit = intervalStr.slice(String(num).length + 6);
             let intervalMs = 0;
 
             if (unit === 's') {
                 intervalMs = num * 1000;
             } else if (unit === 'm') {
                 intervalMs = num * 60 * 1000;
+            } else if (unit === 'h') {
+                intervalMs = num * 60 * 60 * 1000;
+            } else if (unit === 'd') {
+                intervalMs = num * 24 * 60 * 60 * 1000;
             }
+
+            if (intervalMs <= 0) {
+                console.error(`Invalid interval for task ${task.id}: ${task.interval}`);
+                return;
+            }
+
+            const scheduleRecurring = async () => {
+                await executeTask(task);
+                // Schedule next execution
+                task.timerId = setTimeout(scheduleRecurring, intervalMs);
+            };
 
             let initialDelay = 0;
             if (task.startTime) {
@@ -137,18 +149,7 @@ async function scheduleTask(task: ScheduledTask) {
                 }
             }
 
-            task.timerId = setTimeout(async () => {
-                await executeTask(task);
-                // 清除旧的timeout并创建interval
-                if (task.timerId) {
-                    clearTimeout(task.timerId);
-                }
-                const intervalId = setInterval(async () => {
-                    await executeTask(task);
-                }, intervalMs);
-                task.timerId = intervalId;
-                saveTasks(); // 保存新的timerId
-            }, initialDelay);
+            task.timerId = setTimeout(scheduleRecurring, initialDelay);
             break;
     }
 }
@@ -200,11 +201,7 @@ export async function destroy() {
     scheduledTasks.forEach(task => {
         if (task.timerId) {
             try {
-                if (task.type === 'recurring') {
-                    clearInterval(task.timerId);
-                } else {
-                    clearTimeout(task.timerId);
-                }
+                clearTimeout(task.timerId);
             } catch (error) {
                 console.error(`Failed to clear timer for task ${task.id}:`, error);
             }
@@ -337,7 +334,7 @@ export default async (request: any) => {
         case "cancel_all_recurring":
             scheduledTasks.forEach(task => {
                 if (task.type === 'recurring' && task.timerId) {
-                    clearInterval(task.timerId); // 新增清理定时器逻辑
+                    clearTimeout(task.timerId);
                 }
             });
             scheduledTasks = scheduledTasks.filter(task => task.type !== 'recurring');
